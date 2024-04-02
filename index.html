@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="matter.js"></script>
+    </head>
+    <!--The body is where the actual canvas is projected to-->
+    <canvas id="CANVAS"></canvas>
+    <body>
+
+    </body>
+    <script>
+        var mouseX = 0;
+        var mouseY = 0
+        var canvas = document.getElementById("CANVAS")
+
+        function getMousePosition(canvas, event) {
+            let rect = canvas.getBoundingClientRect();
+            let x = event.clientX - rect.left;
+            let y = event.clientY - rect.top;
+            mouseX = x;
+            mouseY = y;
+        }
+ 
+        let canvasElem = document.querySelector("canvas");
+ 
+        canvas.addEventListener("mousedown", function (e) {
+            getMousePosition(canvasElem, e);
+            var mouseBox = Bodies.rectangle(mouseX, mouseY, 80, 80);
+            Composite.add(engine.world,mouseBox);
+
+        }); 
+
+ 
+
+    // module aliases
+    var Engine = Matter.Engine,
+        Render = Matter.Render,
+        Runner = Matter.Runner,
+        Bodies = Matter.Bodies,
+        Composite = Matter.Composite;
+
+    // create an engine
+    var engine = Engine.create();
+
+    // create a renderer
+    var render = Render.create({
+        canvas: canvas,
+        engine: engine
+    });
+
+    canvas.width = window.screen.width
+    
+    canvas.height = window.screen.height
+
+    // create two boxes and a ground
+    var ground = Bodies.rectangle(400, 610, 1000, 60, { isStatic: true });
+
+    // add all of the bodies to the world
+    Composite.add(engine.world, [ground]);
+
+    // run the renderer
+    Render.run(render);
+
+    // create runner
+    var runner = Runner.create();
+
+    // run the engine
+    Runner.run(runner, engine);
+
+</script>
+</html>
