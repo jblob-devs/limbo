@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html>
     <style>
-        #textbox {
+        #textbox,#title,#SwitchMode {
             position: absolute;
             color: #eee;
-            height: 80px;
-            width: 140px;
             cursor: move;
             font-family: "Comfortaa", sans-serif;
             user-select: none;
@@ -16,6 +14,19 @@
             position: relative;
             height: 100%;
             margin: 0;
+        }button {
+            background-color: transparent;
+            background-repeat: no-repeat;
+            border: none;
+            cursor: pointer;
+            border: 2px solid white;
+            border-radius: 5px;
+            overflow: hidden;
+            color: #eee;
+            font-family: "Comfortaa", sans-serif;
+        }button:hover{
+            transform: scale(0.9);
+            transition: 0.5s ease;
         }
     </style>
     <head>
@@ -28,8 +39,12 @@
     <canvas id="CANVAS"></canvas>
     
     <body>
-        <div id="textbox">
+        <div id="title" style="top:5vh;width:150vw">
             <h1>Wagoogus</h1>
+        </div>
+
+        <div id="SwitchMode" style="top:15vh;width:150vw">
+            <button id="switchModeButton" onclick="switchPlacementMode()">Currently:<br> Place Mode</button>
         </div>
     </body>
     <script>
@@ -70,9 +85,9 @@
     });
 
 
-    canvas.width = window.screen.width
+    canvas.width = window.innerWidth
     
-    canvas.height = window.screen.height
+    canvas.height = window.innerHeight
 
     // create two boxes and a ground
     var ground = Bodies.rectangle(400, 610, 500, 60, { isStatic: true });
@@ -80,24 +95,6 @@
     var mouseBox = Bodies.rectangle(500, 100, 80, 80);
     var softBody = Composites.softBody(200, 100, 10, 10, 0, 0, true, 3, particleOptions, constraintOptions);
     
-    let textboxArray = [];
-
-    const box = {
-        h: 80,
-        w: 140,
-        body: Bodies.rectangle(800, 70, 200, 60, { isStatic: true }),
-        elem: document.querySelector("#textbox"),
-        render() {
-            const {x, y} = this.body.position;
-            this.elem.style.top = `${y - this.h / 2}px`;
-            this.elem.style.left = `${x - this.w / 2}px`;
-            this.elem.style.transform = `rotate(${this.body.angle}rad)`;
-        }
-    };
-
-
-
-    textboxArray.push(box)
 
     var particleOptions = { 
         friction: 0.01,
@@ -120,29 +117,29 @@
 
 
     canvas.addEventListener("mousedown", function (e) {
-
-        getMousePosition(canvas, e);
+        if(mode == "place"){
+            getMousePosition(canvas, e);
         console.log(mouseX, mouseY)
         var mouseBox = Bodies.rectangle(mouseX, mouseY, 80, 80);
         var softBody = Composites.softBody(mouseX, mouseY, 7, 7, 0, 0, true, 10, particleOptions, constraintOptions);
-        Composite.add(engine.world, softBody);    
-        
-        
-    
-        
-    }); 
-    
-    (function rerender() {
-        for(let i = 0; i < textboxArray.length; i++){
-            textboxArray[i].render();
+        Composite.add(engine.world, softBody); 
         }
-        Engine.update(engine);
-        requestAnimationFrame(rerender);
-    })();
+    }); 
 
+    function switchPlacementMode(){
+        if(mode == "place"){
+            mode="drag"
+            document.getElementById("switchModeButton").innerHTML = "Currently: <br> Drag Mode"
+        }else{
+            mode="place"
+            document.getElementById("switchModeButton").innerHTML  = "Currently: <br> Place Mode"
+        }
+    }
+
+    
        
     // add all of the bodies to the world
-    Composite.add(engine.world, [ground, box.body, canvasmouse, mConstraint, mouseBox, softBody]);
+    Composite.add(engine.world, [ground,canvasmouse, mConstraint, mouseBox, softBody]);
 
     // run the renderer
     Render.run(render);
@@ -153,12 +150,6 @@
     // run the engine
     //BROKEN CODE, needs to detect a textboc on click
     Runner.run(runner, engine);
-    Events.on(runner, "tick", function(event){
-        if (mConstraint.body == box.body) {
-            alert("yee")
-            return;
-        }
-        console.log("e")
-    });
+
 </script>
 </html>
