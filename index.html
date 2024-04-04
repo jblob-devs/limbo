@@ -39,12 +39,13 @@
     <canvas id="CANVAS"></canvas>
     
     <body>
-        <div id="title" style="top:5vh;width:150vw">
+        <div id="title" style="top:5vh;width:80vw">
             <h1>Wagoogus</h1>
         </div>
 
-        <div id="SwitchMode" style="top:15vh;width:150vw">
+        <div id="SwitchMode" style="top:15vh;width:80vw">
             <button id="switchModeButton" onclick="switchPlacementMode()">Currently:<br> Place Mode</button>
+            <button id="switchTypeButton" onclick="switchTypeMode()">Currently: <br> Tile</button>
         </div>
     </body>
     <script>
@@ -52,6 +53,7 @@
         var mouseY = 0
         var canvas = document.getElementById("CANVAS");
         var mode = "place"
+        var type = "tile"
 
         function getMousePosition(canvas, event) {
             let rect = canvas.getBoundingClientRect();
@@ -66,6 +68,7 @@
         Render = Matter.Render,
         Runner = Matter.Runner,
         Bodies = Matter.Bodies,
+        Body = Matter.Body,
         Composite = Matter.Composite,
         Composites = Matter.Composites,
         Mouse = Matter.Mouse,
@@ -80,7 +83,11 @@
     var render = Render.create({
         canvas: canvas,
         engine: engine,
-        pixelRatio: window.devicePixelRatio
+        
+        options: {
+            pixelRatio: window.devicePixelRatio,
+            wireframes: false
+        }
        
     });
 
@@ -89,40 +96,155 @@
     
     canvas.height = window.innerHeight
 
-    // create two boxes and a ground
-    var ground = Bodies.rectangle(400, 610, 500, 60, { isStatic: true });
-    //var wagoogustext = Bodies.rectangle(800, 70, 200, 60, { isStatic: true });
-    var mouseBox = Bodies.rectangle(500, 100, 80, 80);
-    var softBody = Composites.softBody(200, 100, 10, 10, 0, 0, true, 3, particleOptions, constraintOptions);
-    
+   Composites.softBody(200, 100, 10, 10, 0, 0, true, 3, particleOptions, constraintOptions);
 
     var particleOptions = { 
-        friction: 0.01,
-        frictionStatic: 0.1,
-        render: { visible: true } 
+        friction: 0.5,
+        frictionStatic: 4,
+        render: { 
+            visible: true,
+            wireframes: false
+        } 
     };
 
+    //Adjusts player particles, including fricion and friction static parameters
+    var playerParticleOptions = { 
+        friction: 0.1,
+        frictionStatic: 0,
+        render: { 
+            visible: true,
+            wireframes: false
+        } 
+    };
+
+    
+
     var constraintOptions = { 
-            render: { visible: false }
+            render: { visible: false, wireframes: false }
     };
 
     var canvasmouse = Mouse.create(render.canvas);
 
     
     var mouseConstraintOptions = {
-        mouse: canvasmouse
+        mouse: canvasmouse,
+        render: {
+            visible: false
+        }
     };
+
 
     var mConstraint = MouseConstraint.create(engine, mouseConstraintOptions)
 
+     // create two boxes and a ground
+     var ground = Bodies.rectangle(400, 610, 500, 60, { isStatic: true });
+    //var wagoogustext = Bodies.rectangle(800, 70, 200, 60, { isStatic: true });
+    var mouseBox = Bodies.rectangle(500, 100, 80, 80);
+    
+    //the player
+    var playerBlob = Composites.softBody(250, 100, 3, 3, 0, 0, true, 9, playerParticleOptions, constraintOptions);
+    
+    document.addEventListener('keydown', (event)=> {    
+        if(event.key == 'w'){
+            //for(let i = 0; i < 3; i++){
+                let i=4
+                Body.applyForce(playerBlob.bodies[i], {x: playerBlob.bodies[i].position.x, y: playerBlob.bodies[i].position.y}, {x: 0, y: -0.04});
+            //}
+            
+        }else if(event.key == 'd'){
+            //for(let i = 6; i < 8; i++){
+                let i=4
+                Body.applyForce(playerBlob.bodies[i], {x: playerBlob.bodies[i].position.x, y: playerBlob.bodies[i].position.y}, {x: 0.01, y: 0});
+            //}
+        }else if(event.key == 'a'){
+            //for(let i = 6; i < 8; i++){
+                let i=4
+                Body.applyForce(playerBlob.bodies[i], {x: playerBlob.bodies[i].position.x, y: playerBlob.bodies[i].position.y}, {x: -0.01, y: 0});
+            //}
+        }
+    });
+    
+
+    function createChain(len, x, y, radius){
+
+    
+    var start = Bodies.circle(x, y, radius)
+
+    var playerParticles = [start];
+
+    var prev = null;
+
+    var connectStart = false;
+  
+
+    for(let i = 0; i < len-1; i++){
+        var p1 = Bodies.circle(x + 3 * i, y + 3 *i, radius)
+        playerParticles.push(p1)
+
+        if(!connectStart){
+        var startConstraint = { 
+            bodyA: start,
+            bodyB: p1,
+            length: 25,
+            stiffness: 0.5,
+            render:{
+                visible: false
+            }
+        };
+        var startingC = Constraint.create(startConstraint);
+        Composite.add(engine.world, startingC)
+        connectStart = true;
+        }
+
+        if(prev){
+        var playerConstraint = { 
+            bodyA: prev,
+            bodyB: p1,
+            length: 25,
+            stiffness: 0.5,
+            render:{
+                visible: false
+            }
+        };
+        var playConstraint = Constraint.create(playerConstraint);
+        Composite.add(engine.world, playConstraint)
+        }
+        
+        prev = p1;
+
+    }
+
+    var endConstraint = { 
+            bodyA: prev,
+            bodyB: start,
+            length: 25,
+            stiffness: 0.5,
+            render:{
+                visible: false
+            }
+        };
+        var endingConstraint = Constraint.create(endConstraint);
+        Composite.add(engine.world, endingConstraint)
+
+    
+    
+    
+    
+    
+    Composite.add(engine.world, playerParticles)
+    }
 
     canvas.addEventListener("mousedown", function (e) {
         if(mode == "place"){
-            getMousePosition(canvas, e);
+        getMousePosition(canvas, e);
         console.log(mouseX, mouseY)
-        var mouseBox = Bodies.rectangle(mouseX, mouseY, 80, 80);
-        var softBody = Composites.softBody(mouseX, mouseY, 7, 7, 0, 0, true, 10, particleOptions, constraintOptions);
-        Composite.add(engine.world, softBody); 
+        var placementObj = null;
+        if(type == "tile"){
+            placementObj = Bodies.rectangle(mouseX, mouseY, 80, 80, {isStatic: true});
+        }else{
+            placementObj = Composites.softBody(mouseX, mouseY, 7, 7, 0, 0, true, 10, particleOptions, constraintOptions);
+        }
+        Composite.add(engine.world, placementObj); 
         }
     }); 
 
@@ -136,11 +258,22 @@
         }
     }
 
+
+    function switchTypeMode(){
+        if(type == "tile"){
+            type="soft"
+            document.getElementById("switchTypeButton").innerHTML = "Currently: <br> Soft Body"
+        }else{
+            type="tile"
+            document.getElementById("switchTypeButton").innerHTML  = "Currently: <br> Tile"
+        }
+    }
+
     
        
     // add all of the bodies to the world
-    Composite.add(engine.world, [ground,canvasmouse, mConstraint, mouseBox, softBody]);
-
+    Composite.add(engine.world, [ground,canvasmouse, mConstraint, mouseBox ,playerBlob]);
+   
     // run the renderer
     Render.run(render);
 
@@ -148,8 +281,12 @@
     var runner = Runner.create();
 
     // run the engine
-    //BROKEN CODE, needs to detect a textboc on click
     Runner.run(runner, engine);
+
+    
+    
+   
+
 
 </script>
 </html>
