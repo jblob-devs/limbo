@@ -14,6 +14,7 @@
             position: relative;
             height: 100%;
             margin: 0;
+            overflow: hidden;
         }button {
             background-color: transparent;
             background-repeat: no-repeat;
@@ -74,7 +75,8 @@
         Mouse = Matter.Mouse,
         MouseConstraint = Matter.MouseConstraint,
         Constraint = Matter.Constraint,
-        Events = Matter.Events;
+        Events = Matter.Events,
+        Bounds = Matter.Bounds
         
     // create an engine
     var engine = Engine.create();
@@ -86,7 +88,10 @@
         
         options: {
             pixelRatio: window.devicePixelRatio,
-            wireframes: false
+            wireframes: false,
+            hasBounds: true,
+            width: window.innerWidth, 
+            height: window.innerHeight
         }
        
     });
@@ -142,7 +147,7 @@
     var mouseBox = Bodies.rectangle(500, 100, 80, 80);
     
     //the player
-    var playerBlob = Composites.softBody(250, 100, 3, 3, 0, 0, true, 9, playerParticleOptions, constraintOptions);
+    var playerBlob = Composites.softBody(250, 100, 3, 3, 0, 0, true, 12, playerParticleOptions, constraintOptions);
     
     document.addEventListener('keydown', (event)=> {    
         if(event.key == 'w'){
@@ -270,6 +275,37 @@
     }
 
     
+    Events.on(engine, 'beforeUpdate', function() {
+             // apply zoom
+        var canvas = document.getElementById('CANVAS');
+        var ctx = canvas.getContext("2d");
+        ctx.translate(window.innerWidth/2, window.innerHeight/2);
+        ctx.scale(zoom, zoom);
+        ctx.translate(-window.innerWidth/2, -window.innerHeight/2);  
+        
+        // center view at player 
+        Bounds.shift(render.bounds,
+        {
+            
+            x: playerBlob.bodies[4].position.x - window.innerWidth / 2,
+            y: playerBlob.bodies[4].position.y - window.innerHeight / 2
+            
+        });
+
+        //Mouse.setOffset(mConstraint.mouse, {x: playerBlob.bodies[4].position.x + window.innerWidth / 2, y: playerBlob.bodies[4].position.y + window.innerHeight / 2});
+
+        console.log("e")
+    });
+       
+    
+    
+    window.onresize = function() {
+        render.canvas.width = window.innerWidth;
+        render.canvas.height = window.innerHeight;
+
+    }
+   
+    
        
     // add all of the bodies to the world
     Composite.add(engine.world, [ground,canvasmouse, mConstraint, mouseBox ,playerBlob]);
@@ -283,9 +319,8 @@
     // run the engine
     Runner.run(runner, engine);
 
-    
-    
-   
+    var zoom = 1
+
 
 
 </script>
