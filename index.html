@@ -114,8 +114,7 @@
 
     //Adjusts player particles, including fricion and friction static parameters
     var playerParticleOptions = { 
-        friction: 0.1,
-        frictionStatic: 0,
+        frictionAir: 0.05,
         render: { 
             visible: true,
             wireframes: false
@@ -133,41 +132,50 @@
     
     var mouseConstraintOptions = {
         mouse: canvasmouse,
-        render: {
+        constraint:{
+            render: {
             visible: false
         }
+        },
+        collisionFilter: {
+            category: 0x0001,
+            mask: 0x0000, // Nothing will collide with this
+        }
+        
     };
-
-
+    
+    const TILE_CATEGORY = 0x0002;
     var mConstraint = MouseConstraint.create(engine, mouseConstraintOptions)
 
      // create two boxes and a ground
-     var ground = Bodies.rectangle(400, 610, 500, 60, { isStatic: true });
+     var ground = Bodies.rectangle(400, 610, 500, 60, { isStatic: true, collisionFilter:{category: TILE_CATEGORY} });
     //var wagoogustext = Bodies.rectangle(800, 70, 200, 60, { isStatic: true });
     var mouseBox = Bodies.rectangle(500, 100, 80, 80);
     
     //the player
     var playerBlob = Composites.softBody(250, 100, 3, 3, 0, 0, true, 12, playerParticleOptions, constraintOptions);
-    
-    document.addEventListener('keydown', (event)=> {    
+    const dampingFactor = 1; 
+    document.addEventListener('keydown', (event)=> {  
+        const force = 0.05 * (playerBlob.bodies[4].mass);  
         if(event.key == 'w'){
             //for(let i = 0; i < 3; i++){
                 let i=4
-                Body.applyForce(playerBlob.bodies[i], {x: playerBlob.bodies[i].position.x, y: playerBlob.bodies[i].position.y}, {x: 0, y: -0.04});
+                Body.applyForce(playerBlob.bodies[i], {x: playerBlob.bodies[i].position.x, y: playerBlob.bodies[i].position.y}, {x: 0, y: -force * 8});
             //}
             
         }else if(event.key == 'd'){
             //for(let i = 6; i < 8; i++){
                 let i=4
-                Body.applyForce(playerBlob.bodies[i], {x: playerBlob.bodies[i].position.x, y: playerBlob.bodies[i].position.y}, {x: 0.01, y: 0});
+                Body.applyForce(playerBlob.bodies[i], {x: playerBlob.bodies[i].position.x, y: playerBlob.bodies[i].position.y}, {x: force, y: 0});
             //}
         }else if(event.key == 'a'){
             //for(let i = 6; i < 8; i++){
                 let i=4
-                Body.applyForce(playerBlob.bodies[i], {x: playerBlob.bodies[i].position.x, y: playerBlob.bodies[i].position.y}, {x: -0.01, y: 0});
+                Body.applyForce(playerBlob.bodies[i], {x: playerBlob.bodies[i].position.x, y: playerBlob.bodies[i].position.y}, {x: -force, y: 0});
             //}
         }
     });
+
     
 
     function createChain(len, x, y, radius){
@@ -245,11 +253,11 @@
         //var correctedMouse = getCorrectedMousePosition(e);
         //mouseX = correctedMouse.x;
         //mouseY = correctedMouse.y;
-        getMousePosition(canvas, e)
+        getCorrectedMousePosition(e)
         console.log(mouseX, mouseY)
         var placementObj = null;
         if(type == "tile"){
-            placementObj = Bodies.rectangle(mouseX, mouseY, 80, 80, {isStatic: true});
+            placementObj = Bodies.rectangle(mouseX, mouseY, 80, 80, {isStatic: true, collisionFilter:{category:TILE_CATEGORY}});
         }else{
             placementObj = Composites.softBody(mouseX, mouseY, 7, 7, 0, 0, true, 10, particleOptions, constraintOptions);
         }
@@ -281,36 +289,100 @@
 
     
     Events.on(engine, 'beforeUpdate', function(e) {
+        getCorrectedMousePosition(e)
+        canvasmouse.position.x = mouseX
+        canvasmouse.position.y = mouseY
         var canvas = document.getElementById('CANVAS');
+        cameraOffset.x = ((playerBlob.bodies[4].position.x)*devicePixelRatio - (window.innerWidth / 2));
+        cameraOffset.y = ((playerBlob.bodies[4].position.y)*devicePixelRatio - (window.innerHeight / 2));
         
         // center view at player 
         Bounds.shift(render.bounds,
         {
             
-            x: playerBlob.bodies[4].position.x - window.innerWidth / 2,
-            y: playerBlob.bodies[4].position.y - window.innerHeight / 2
+            x: playerBlob.bodies[4].position.x - window.innerWidth/2,
+            y: playerBlob.bodies[4].position.y - window.innerHeight/2
             
         });
 
         //Mouse.setOffset(mConstraint.mouse, {x: playerBlob.bodies[4].position.x + window.innerWidth / 2, y: playerBlob.bodies[4].position.y + window.innerHeight / 2});
-        cameraOffset.x = ((playerBlob.bodies[4].position.x)*devicePixelRatio - (window.innerWidth / 2))*1;
-        cameraOffset.y = ((playerBlob.bodies[4].position.y)*devicePixelRatio - (window.innerHeight / 2))*1;
+        
         //console.log(cameraOffset.x + ", " + cameraOffset.y)
         //var correctedMouse = getCorrectedMousePosition(e);
         //mouseX = correctedMouse.x;
         //mouseY = correctedMouse.y;
+        canvasmouse.position.x = mouseX
+        canvasmouse.position.y = mouseY
+
+
+        //check for a "death" 
+        if(playerBlob.bodies[4].position.y > 800){
+            setSoftBodyPosition(playerBlob, 360, 560)
+            Body.setVelocity(playerBlob.bodies[4], {x:0, y:0})
+        }
+
+        playerBlob.bodies.forEach(function(part) {
+            part.density = 0.05; // Adjust density as needed
+            part.frictionAir = 0.01; // Adjust air friction as needed
+            part.gravityScale = 1; // Adjust gravity scale as needed
+        });
+
+        const groundCollision = playerBlob.bodies.some(body => {
+        return body.collisionFilter.category === TILE_CATEGORY; 
+        });
+
+    if (groundCollision) {
+        // Apply damping effect only when touching the ground
+        playerBlob.bodies.forEach(body => {
+            // Reduce velocity by applying damping effect
+            const velocityX = 0//body.velocity.x * (1 - dampingFactor);
+            const velocityY = 0//body.velocity.y * (1 - dampingFactor);
+            Body.setVelocity(body, { x: velocityX, y: velocityY });
+        });
+    }
+       
     });
+
+    //sets soft body position 
+    function setSoftBodyPosition(softBody, newX, newY) {
+    // Calculate the centroid (center of mass)
+    let centerX = 0;
+    let centerY = 0;
+    softBody.bodies.forEach(function(part) {
+        centerX += part.position.x;
+        centerY += part.position.y;
+    });
+    centerX /= softBody.bodies.length;
+    centerY /= softBody.bodies.length;
+
+    // Calculate offset
+    let offsetX = newX - centerX;
+    let offsetY = newY - centerY;
+
+    // Apply offset to each body part
+    softBody.bodies.forEach(function(part) {
+        Body.setPosition(part, {
+            x: part.position.x + offsetX,
+            y: part.position.y + offsetY
+        });
+        Body.setVelocity(part, {
+            x: 0,
+            y: 0
+        });
+
+    });
+}
 
 
     function getCorrectedMousePosition(event) {
 
-        var rect = canvas.getBoundingClientRect(); // Assumes canvas is your canvas element
+    var rect = canvas.getBoundingClientRect(); // Assumes canvas is your canvas element
     var scaleX = canvas.width / rect.width;    // Relationship bitmap vs. element for X
     var scaleY = canvas.height / rect.height;  // Relationship bitmap vs. element for Y
 
     // Calculate the mouse position corrected by the camera offset and canvas scaling
-      mouseX = (event.clientX - rect.left) * scaleX - cameraOffset.x;
-      mouseY = (event.clientY - rect.top) * scaleY - cameraOffset.y;
+      mouseX = (event.clientX - rect.left) * scaleX + cameraOffset.x;
+      mouseY = (event.clientY - rect.top) * scaleY + cameraOffset.y;
 
     return { x: mouseX, y: mouseY };
         //mouseX = canvasmouse.position.x - cameraOffset.x;
@@ -339,10 +411,10 @@ function getCorrectedMousePosition(event) {
     return { x: mouseyX, y: mouseyY };
 }
 */ 
-document.addEventListener("mousemove", function(event) {
-    console.log("Raw mouse position:", event.clientX, event.clientY);
-    console.log("Canvas mouse position:", canvasmouse.position.x, canvasmouse.position.y);
-});
+//document.addEventListener("mousemove", function(event) {
+    //console.log("Raw mouse position:", event.clientX, event.clientY);
+    //console.log("Canvas mouse position:", canvasmouse.position.x, canvasmouse.position.y);
+//});
     
     
     window.onresize = function() {
