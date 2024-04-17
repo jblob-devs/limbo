@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <style>
-        #textbox,#title,#SwitchMode {
+        #textbox,#title,#SwitchMode, .display, #textBox {
             position: absolute;
             color: #eee;
             cursor: move;
@@ -28,11 +28,16 @@
         }button:hover{
             transform: scale(0.9);
             transition: 0.5s ease;
+        }#textBox{
+            font-size: 5vh;
         }
     </style>
     <head>
-        <script src="matter.js"></script>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
+       <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+       <script src="matter.js"></script>
+       <script src="levellogic.js"></script>
+       <!--jquery script-->
+       <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap" rel="stylesheet">
     </head>
@@ -40,14 +45,20 @@
     <canvas id="CANVAS"></canvas>
     
     <body>
-        <div id="title" style="top:5vh;width:80vw">
+        <div id="title" style="top:5vh;width:90vw">
             <h1>Wagoogus</h1>
+            <br>
+            
         </div>
-
+        <div id="textBox" style="top:15vh;left:45vw"></div>
+        <button style="top:15vh;left:45vw" class ="display" id="startButton" onclick="start()">Start</button>
+        <!--
         <div id="SwitchMode" style="top:15vh;width:80vw">
             <button id="switchModeButton" onclick="switchPlacementMode()">Currently:<br> Place Mode</button>
             <button id="switchTypeButton" onclick="switchTypeMode()">Currently: <br> Tile</button>
         </div>
+    -->
+
     </body>
     <script>
         var mouseX = 0;
