@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <style>
-        #textbox,#title,#SwitchMode, .display, #textBox {
+        #textbox,#title,#SwitchMode, .display, #textBox{
             position: absolute;
             color: #eee;
             cursor: move;
@@ -30,6 +30,8 @@
             transition: 0.5s ease;
         }#textBox{
             font-size: 5vh;
+        }.eye, .smile{
+            height: 5vh;
         }
     </style>
     <head>
@@ -50,7 +52,13 @@
             <br>
             
         </div>
-        <div id="textBox" style="top:15vh;left:45vw"></div>
+        <div id="eyes" style="position:absolute;top:15vh;left:10vw">
+            <img class="eye" src="images/eye.png" >
+            <img class="eye" src="images/eye.png" >
+            <br>
+            <img class="smile" src="images/smile.png">        
+        </div>
+        <div id="textBox" style="top:15vh;left:25vw"></div>
         <button style="top:15vh;left:45vw" class ="display" id="startButton" onclick="start()">Start</button>
         <!--
         <div id="SwitchMode" style="top:15vh;width:80vw">
@@ -156,10 +164,12 @@
     };
     
     const TILE_CATEGORY = 0x0002;
+    const END_CATEGORY = 0x0003;
     var mConstraint = MouseConstraint.create(engine, mouseConstraintOptions)
 
      // create two boxes and a ground
-     var ground = Bodies.rectangle(400, 610, 500, 60, { isStatic: true, collisionFilter:{category: TILE_CATEGORY} });
+    var ground = Bodies.rectangle(400, 610, 500, 60, { isStatic: true, collisionFilter:{category: TILE_CATEGORY} });
+    var endpoint = Bodies.rectangle(150, 500, 60, 60, { isStatic: true, collisionFilter:{category: END_CATEGORY} });
     //var wagoogustext = Bodies.rectangle(800, 70, 200, 60, { isStatic: true });
     var mouseBox = Bodies.rectangle(500, 100, 80, 80);
     
@@ -185,6 +195,8 @@
                 Body.applyForce(playerBlob.bodies[i], {x: playerBlob.bodies[i].position.x, y: playerBlob.bodies[i].position.y}, {x: -force, y: 0});
             //}
         }
+
+        
     });
 
     
@@ -351,7 +363,7 @@
             Body.setVelocity(body, { x: velocityX, y: velocityY });
         });
     }
-       
+    updateEyes()
     });
 
     //sets soft body position 
@@ -442,7 +454,7 @@ function getCorrectedMousePosition(event) {
     
        
     // add all of the bodies to the world
-    Composite.add(engine.world, [ground,canvasmouse, mConstraint, mouseBox ,playerBlob]);
+    Composite.add(engine.world, [ground,canvasmouse, mConstraint, mouseBox ,playerBlob,endpoint]);
    
     // run the renderer
     Render.run(render);
