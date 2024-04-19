@@ -120,7 +120,7 @@
     
     canvas.height = window.innerHeight
 
-   Composites.softBody(200, 100, 10, 10, 0, 0, true, 3, particleOptions, constraintOptions);
+   //Composites.softBody(200, 100, 10, 10, 0, 0, true, 3, particleOptions, constraintOptions);
 
     var particleOptions = { 
         friction: 0.5,
@@ -163,13 +163,24 @@
         
     };
     
+    
     const TILE_CATEGORY = 0x0002;
-    const END_CATEGORY = 0x0003;
+
     var mConstraint = MouseConstraint.create(engine, mouseConstraintOptions)
 
      // create two boxes and a ground
     var ground = Bodies.rectangle(400, 610, 500, 60, { isStatic: true, collisionFilter:{category: TILE_CATEGORY} });
-    var endpoint = Bodies.rectangle(150, 500, 60, 60, { isStatic: true, collisionFilter:{category: END_CATEGORY} });
+    var endpoint = Bodies.rectangle(150, 500, 60, 60, { isStatic: true });
+    var endpointdeco1 = Bodies.rectangle(150, 500, 40, 40, { isStatic: true });
+    var endpointdeco2 = Bodies.rectangle(150, 500, 20, 20, { isStatic: true });
+    
+    const rotationSpeed = 0.02; // Adjust as needed
+    setInterval(() => {
+        Body.rotate(endpoint, rotationSpeed);
+        Body.rotate(endpointdeco1, rotationSpeed * 2);
+        Body.rotate(endpointdeco2, rotationSpeed * 3);
+    }, 1000 / 60);
+    
     //var wagoogustext = Bodies.rectangle(800, 70, 200, 60, { isStatic: true });
     var mouseBox = Bodies.rectangle(500, 100, 80, 80);
     
@@ -198,8 +209,6 @@
 
         
     });
-
-    
 
     function createChain(len, x, y, radius){
 
@@ -413,48 +422,36 @@
        
 }
 
-
-/*
-function getCorrectedMousePosition(event) {
-    var rect = canvas.getBoundingClientRect(); // Assumes canvas is your canvas element
-    console.log("Canvas rect:", rect);
-    var scaleX = canvas.width / rect.width;    // Relationship bitmap vs. element for X
-    var scaleY = canvas.height / rect.height;  // Relationship bitmap vs. element for Y
-
-    // Log raw mouse coordinates
-    console.log("Raw mouse position:", event.clientX, event.clientY);
-
-    // Calculate the mouse position corrected by the camera offset and canvas scaling
-    var mouseyX = (event.clientX - rect.left) * scaleX - cameraOffset.x;
-    var mouseyY = (event.clientY - rect.top) * scaleY - cameraOffset.y;
-        console.log(scaleX + ", " + cameraOffset.x)
-    // Log corrected mouse position
-    console.log("Corrected mouse position:", mouseyX, mouseyY);
-
-    return { x: mouseyX, y: mouseyY };
-}
-*/ 
-//document.addEventListener("mousemove", function(event) {
-    //console.log("Raw mouse position:", event.clientX, event.clientY);
-    //console.log("Canvas mouse position:", canvasmouse.position.x, canvasmouse.position.y);
-//});
-    
-    
     window.onresize = function() {
         render.canvas.width = window.innerWidth;
         render.canvas.height = window.innerHeight;
 
     }
-   
-    //document.addEventListener("mousemove", function(event) {
-    //var correctedMouse = getCorrectedMousePosition(event);
-    //canvasmouse.position.x = correctedMouse.x;
-    //canvasmouse.position.y = correctedMouse.y;
-//});
     
+    
+    Events.on(engine, 'collisionStart', function(event){
+
+
+        //checks if a playerbody and the end point have collided
+        event.pairs.forEach(pair => {
+            for(let i = 0; i < 8; i++){
+                if((pair.bodyA === playerBlob.bodies[i] && pair.bodyB === endpoint) || 
+                (pair.bodyA === endpoint && pair.bodyB === playerBlob.bodies[i])) {
+                    createLevel(1, playerBlob, engine, render, canvas)
+                }
+            }
        
+
+        });
+    });
+
+
+
+
+
+
     // add all of the bodies to the world
-    Composite.add(engine.world, [ground,canvasmouse, mConstraint, mouseBox ,playerBlob,endpoint]);
+    Composite.add(engine.world, [ground,canvasmouse, mConstraint, mouseBox ,playerBlob,endpoint,endpointdeco1, endpointdeco2]);
    
     // run the renderer
     Render.run(render);
@@ -465,7 +462,10 @@ function getCorrectedMousePosition(event) {
     // run the engine
     Runner.run(runner, engine);
 
-    var zoom = 2
+
+    
+
+
 
 
 

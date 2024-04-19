@@ -57,6 +57,7 @@ let tutorialDialogue = async()=>{
     $("#textBox").html("")
     $("#eyes").fadeToggle(500);
 
+
 }
 
 function start(){
@@ -66,3 +67,20 @@ function start(){
 }
 
 
+function createLevel(number, player, engine, render, canvas){
+    Composite.clear(engine.world);
+    Render.stop(render);
+ 
+  if(number == 1){
+      let ground = Bodies.rectangle(250, 600, 610, 50, { isStatic: true, collisionFilter:{category: TILE_CATEGORY} });
+      Composite.add(engine.world, [ground, player])
+  }
+
+
+  Render.run(render);
+  let runner = Runner.create();
+
+      // run the engine
+  Runner.run(runner, engine);
+
+  }
