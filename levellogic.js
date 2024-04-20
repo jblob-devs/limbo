@@ -30,8 +30,8 @@ function updateEyes() {
       const eyeRect = eye.getBoundingClientRect();
       const eyeCenterX = eyeRect.left + eyeRect.width / 2;
       const eyeCenterY = eyeRect.top + eyeRect.height / 2;
-      const dx = playerBlob.bodies[4].position.x - eyeCenterX;
-      const dy = playerBlob.bodies[4].position.y - eyeCenterY;
+      const dx = playerBlob.position.x - eyeCenterX;
+      const dy = playerBlob.position.y - eyeCenterY;
       const angle = Math.atan2(dy, dx)  - Math.PI / 2;
       eye.style.transform = `rotate(${angle}rad)`;
   });

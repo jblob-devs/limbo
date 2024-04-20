@@ -131,21 +131,6 @@
         } 
     };
 
-    //Adjusts player particles, including fricion and friction static parameters
-    var playerParticleOptions = { 
-        frictionAir: 0.05,
-        render: { 
-            visible: true,
-            wireframes: false
-        } 
-    };
-
-    
-
-    var constraintOptions = { 
-            render: { visible: false, wireframes: false }
-    };
-
     var canvasmouse = Mouse.create(render.canvas);
 
     
@@ -167,7 +152,8 @@
     const TILE_CATEGORY = 0x0002;
 
     var mConstraint = MouseConstraint.create(engine, mouseConstraintOptions)
-
+    let isOnGround = false;
+    let maxSpeedX = 15;
      // create two boxes and a ground
     var ground = Bodies.rectangle(400, 610, 500, 60, { isStatic: true, collisionFilter:{category: TILE_CATEGORY} });
     var endpoint = Bodies.rectangle(150, 500, 60, 60, { isStatic: true });
@@ -182,33 +168,52 @@
     }, 1000 / 60);
     
     //var wagoogustext = Bodies.rectangle(800, 70, 200, 60, { isStatic: true });
-    var mouseBox = Bodies.rectangle(500, 100, 80, 80);
-    
+    //var mouseBox = Bodies.rectangle(500, 100, 80, 80, {collisionFilter:{category: TILE_CATEGORY} });
+    let velJump = 0;
     //the player
-    var playerBlob = Composites.softBody(250, 100, 3, 3, 0, 0, true, 12, playerParticleOptions, constraintOptions);
-    const dampingFactor = 1; 
+    var playerBlob = Bodies.rectangle(400, 100, 40, 40);
+    playerBlob.friction = 0;
     document.addEventListener('keydown', (event)=> {  
-        const force = 0.05 * (playerBlob.bodies[4].mass);  
-        if(event.key == 'w'){
-            //for(let i = 0; i < 3; i++){
-                let i=4
-                Body.applyForce(playerBlob.bodies[i], {x: playerBlob.bodies[i].position.x, y: playerBlob.bodies[i].position.y}, {x: 0, y: -force * 8});
-            //}
+        const force = 0.05 * (playerBlob.mass);  
+      
+        if(event.key == 'w' && isOnGround){
+            velJump = playerBlob.velocity.x
+            Body.applyForce(playerBlob, {x: playerBlob.position.x, y: playerBlob.position.y}, {x: 0, y: -force*0.6});   
+        }else if(event.key == 'd' && playerBlob.velocity.x < maxSpeedX){
+            if(isOnGround){
+                Body.setVelocity(playerBlob, { x: 5, y: playerBlob.velocity.y });
+            }else{
+                Body.setVelocity(playerBlob, { x: 3, y: playerBlob.velocity.y });
+            }
             
-        }else if(event.key == 'd'){
-            //for(let i = 6; i < 8; i++){
-                let i=4
-                Body.applyForce(playerBlob.bodies[i], {x: playerBlob.bodies[i].position.x, y: playerBlob.bodies[i].position.y}, {x: force, y: 0});
-            //}
-        }else if(event.key == 'a'){
-            //for(let i = 6; i < 8; i++){
-                let i=4
-                Body.applyForce(playerBlob.bodies[i], {x: playerBlob.bodies[i].position.x, y: playerBlob.bodies[i].position.y}, {x: -force, y: 0});
-            //}
+            //Body.applyForce(playerBlob, {x: playerBlob.position.x, y: playerBlob.position.y}, {x: force * 0.1, y: 0});
+        }else if(event.key == 'a' && playerBlob.velocity.x > -maxSpeedX){
+            if(isOnGround){
+                Body.setVelocity(playerBlob, { x: -5, y: playerBlob.velocity.y }); 
+            }else{
+                Body.setVelocity(playerBlob, { x: -3, y: playerBlob.velocity.y }); 
+            }
+               
+            //Body.applyForce(playerBlob, {x: playerBlob.position.x, y: playerBlob.position.y}, {x: -force * 0.1, y: 0});
         }
 
         
+
+        
     });
+
+    window.addEventListener('keyup', event => {
+    if (event.key === 'd' || event.key === 'a') {
+        if(!isOnGround){
+            //velJump = playerBlob.velocity.x
+        }else{
+        // Set horizontal velocity to zero
+        for(let i = 0; i < 9; i++){
+        Body.setVelocity(playerBlob, { x: 0, y: playerBlob.velocity.y });
+        }
+    }
+    }
+});
 
     function createChain(len, x, y, radius){
 
@@ -307,7 +312,6 @@
         }
     }
 
-
     function switchTypeMode(){
         if(type == "tile"){
             type="soft"
@@ -319,21 +323,21 @@
     }
     let cameraOffset={x:0, y:0}
 
-    
+    let dampening = 0.2;
     Events.on(engine, 'beforeUpdate', function(e) {
         getCorrectedMousePosition(e)
         canvasmouse.position.x = mouseX
         canvasmouse.position.y = mouseY
         var canvas = document.getElementById('CANVAS');
-        cameraOffset.x = ((playerBlob.bodies[4].position.x)*devicePixelRatio - (window.innerWidth / 2));
-        cameraOffset.y = ((playerBlob.bodies[4].position.y)*devicePixelRatio - (window.innerHeight / 2));
+        cameraOffset.x = ((playerBlob.position.x)*devicePixelRatio - (window.innerWidth / 2));
+        cameraOffset.y = ((playerBlob.position.y)*devicePixelRatio - (window.innerHeight / 2));
         
         // center view at player 
         Bounds.shift(render.bounds,
         {
             
-            x: playerBlob.bodies[4].position.x - window.innerWidth/2,
-            y: playerBlob.bodies[4].position.y - window.innerHeight/2
+            x: playerBlob.position.x - window.innerWidth/2,
+            y: playerBlob.position.y - window.innerHeight/2
             
         });
 
@@ -348,30 +352,30 @@
 
 
         //check for a "death" 
-        if(playerBlob.bodies[4].position.y > 800){
-            setSoftBodyPosition(playerBlob, 360, 560)
-            Body.setVelocity(playerBlob.bodies[4], {x:0, y:0})
+        if(playerBlob.position.y > 800){
+            Body.setPosition(playerBlob, {x:360, y:560})
+            Body.setVelocity(playerBlob, {x:0, y:0})
         }
+        playerBlob.density = 0.05; // Adjust density as needed
+        playerBlob.frictionAir = 0.001; // Adjust air friction as needed
+        playerBlob.gravityScale = 1; // Adjust gravity scale as needed
+    
+    let vel = playerBlob.velocity;
 
-        playerBlob.bodies.forEach(function(part) {
-            part.density = 0.05; // Adjust density as needed
-            part.frictionAir = 0.01; // Adjust air friction as needed
-            part.gravityScale = 1; // Adjust gravity scale as needed
-        });
-
-        const groundCollision = playerBlob.bodies.some(body => {
-        return body.collisionFilter.category === TILE_CATEGORY; 
-        });
-
-    if (groundCollision) {
-        // Apply damping effect only when touching the ground
-        playerBlob.bodies.forEach(body => {
-            // Reduce velocity by applying damping effect
-            const velocityX = 0//body.velocity.x * (1 - dampingFactor);
-            const velocityY = 0//body.velocity.y * (1 - dampingFactor);
-            Body.setVelocity(body, { x: velocityX, y: velocityY });
+    // Check if velocity exceeds maximum and adjust if necessary
+    if (Math.abs(vel.x) > maxSpeedX) {
+        Body.setVelocity(playerBlob, { 
+            x: Math.sign(vel.x) * maxSpeedX, 
+            y: vel.y 
         });
     }
+    if(!isOnGround){
+        for(let i =0;i < 9; i++){
+        //Body.setVelocity(playerBlob, { x: velJump * (1-dampening), y: playerBlob.velocity.y });
+        }
+    }
+
+
     updateEyes()
     });
 
@@ -421,37 +425,46 @@
         //mouseY = canvasmouse.position.y - cameraOffset.y;
        
 }
-
     window.onresize = function() {
         render.canvas.width = window.innerWidth;
         render.canvas.height = window.innerHeight;
 
     }
-    
-    
     Events.on(engine, 'collisionStart', function(event){
 
 
         //checks if a playerbody and the end point have collided
         event.pairs.forEach(pair => {
-            for(let i = 0; i < 8; i++){
-                if((pair.bodyA === playerBlob.bodies[i] && pair.bodyB === endpoint) || 
-                (pair.bodyA === endpoint && pair.bodyB === playerBlob.bodies[i])) {
+
+                if((pair.bodyA === playerBlob && pair.bodyB === endpoint) || 
+                (pair.bodyA === endpoint && pair.bodyB === playerBlob)) {
                     createLevel(1, playerBlob, engine, render, canvas)
                 }
-            }
-       
-
         });
+    });
+    Events.on(engine, 'collisionStart', event => {
+    event.pairs.forEach(pair => {
+        if (pair.bodyA.collisionFilter.category === TILE_CATEGORY && pair.bodyB === playerBlob|| pair.bodyA === playerBlob && pair.bodyB.collisionFilter.category === TILE_CATEGORY) {
+            if(isOnGround == false){
+                Body.setVelocity(playerBlob, { x: 0, y: 0});
+            }
+            isOnGround = true;
+            
+        }
+    });
+    });
+    Events.on(engine, 'collisionEnd', event => {
+    event.pairs.forEach(pair => {
+            if (pair.bodyA.collisionFilter.category === TILE_CATEGORY && pair.bodyB === playerBlob || pair.bodyA === playerBlob && pair.bodyB.collisionFilter.category === TILE_CATEGORY) {
+            isOnGround = false;
+        }
+    });
     });
 
 
 
-
-
-
     // add all of the bodies to the world
-    Composite.add(engine.world, [ground,canvasmouse, mConstraint, mouseBox ,playerBlob,endpoint,endpointdeco1, endpointdeco2]);
+    Composite.add(engine.world, [ground,canvasmouse, mConstraint ,playerBlob,endpoint,endpointdeco1, endpointdeco2]);
    
     // run the renderer
     Render.run(render);
