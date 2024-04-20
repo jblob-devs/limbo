@@ -178,20 +178,20 @@
       
         if(event.key == 'w' && isOnGround){
             velJump = playerBlob.velocity.x
-            Body.applyForce(playerBlob, {x: playerBlob.position.x, y: playerBlob.position.y}, {x: 0, y: -force*0.6});   
+            Body.applyForce(playerBlob, {x: playerBlob.position.x, y: playerBlob.position.y}, {x: 0, y: -force*0.5});   
         }else if(event.key == 'd' && playerBlob.velocity.x < maxSpeedX){
             if(isOnGround){
-                Body.setVelocity(playerBlob, { x: 5, y: playerBlob.velocity.y });
+                Body.setVelocity(playerBlob, { x: 4, y: playerBlob.velocity.y });
             }else{
-                Body.setVelocity(playerBlob, { x: 3, y: playerBlob.velocity.y });
+                Body.setVelocity(playerBlob, { x: 1, y: playerBlob.velocity.y });
             }
             
             //Body.applyForce(playerBlob, {x: playerBlob.position.x, y: playerBlob.position.y}, {x: force * 0.1, y: 0});
         }else if(event.key == 'a' && playerBlob.velocity.x > -maxSpeedX){
             if(isOnGround){
-                Body.setVelocity(playerBlob, { x: -5, y: playerBlob.velocity.y }); 
+                Body.setVelocity(playerBlob, { x: -4, y: playerBlob.velocity.y }); 
             }else{
-                Body.setVelocity(playerBlob, { x: -3, y: playerBlob.velocity.y }); 
+                Body.setVelocity(playerBlob, { x: -1, y: playerBlob.velocity.y }); 
             }
                
             //Body.applyForce(playerBlob, {x: playerBlob.position.x, y: playerBlob.position.y}, {x: -force * 0.1, y: 0});
@@ -357,12 +357,12 @@
             Body.setVelocity(playerBlob, {x:0, y:0})
         }
         playerBlob.density = 0.05; // Adjust density as needed
-        playerBlob.frictionAir = 0.001; // Adjust air friction as needed
+        playerBlob.frictionAir = 0.0001; // Adjust air friction as needed
         playerBlob.gravityScale = 1; // Adjust gravity scale as needed
     
     let vel = playerBlob.velocity;
 
-    // Check if velocity exceeds maximum and adjust if necessary
+    // caps players max speed
     if (Math.abs(vel.x) > maxSpeedX) {
         Body.setVelocity(playerBlob, { 
             x: Math.sign(vel.x) * maxSpeedX, 
@@ -374,10 +374,12 @@
         //Body.setVelocity(playerBlob, { x: velJump * (1-dampening), y: playerBlob.velocity.y });
         }
     }
-
-
+    
+    
+    console.log(isOnGround)
     updateEyes()
     });
+
 
     //sets soft body position 
     function setSoftBodyPosition(softBody, newX, newY) {
@@ -442,25 +444,48 @@
                 }
         });
     });
+
+    
     Events.on(engine, 'collisionStart', event => {
     event.pairs.forEach(pair => {
+        
         if (pair.bodyA.collisionFilter.category === TILE_CATEGORY && pair.bodyB === playerBlob|| pair.bodyA === playerBlob && pair.bodyB.collisionFilter.category === TILE_CATEGORY) {
-            if(isOnGround == false){
+            if(isBottomTouching(pair.bodyA, pair.bodyB, threshold) || isBottomTouching(pair.bodyB, pair.bodyA, threshold)){
+                //if(isOnGround == false){
                 Body.setVelocity(playerBlob, { x: 0, y: 0});
-            }
-            isOnGround = true;
-            
+
+                //}
+                isOnGround = true;
+            }    
         }
     });
     });
     Events.on(engine, 'collisionEnd', event => {
     event.pairs.forEach(pair => {
             if (pair.bodyA.collisionFilter.category === TILE_CATEGORY && pair.bodyB === playerBlob || pair.bodyA === playerBlob && pair.bodyB.collisionFilter.category === TILE_CATEGORY) {
-            isOnGround = false;
+               // if(isBottomTouching(pair.bodyA, pair.bodyB, threshold) || isBottomTouching(pair.bodyB, pair.bodyA, threshold)){
+
+                isOnGround = false;
+                //}
         }
     });
     });
 
+    let threshold = 50;
+    function isBottomTouching(bodyA, bodyB, threshold) {
+    // Get the vertices of bodyA
+    const verticesA = bodyA.vertices;
+
+    // Find the lowest y-coordinate of bodyA
+    const lowestY = Math.min(...verticesA.map(vertex => vertex.y));
+
+    // Get the top boundary of bodyB
+    const topBoundary = bodyB.bounds.min.y;
+
+    // Check if the lowest vertex of bodyA is within the threshold distance to the top boundary of bodyB
+    return lowestY >= topBoundary - threshold;
+}
+    
 
 
     // add all of the bodies to the world
