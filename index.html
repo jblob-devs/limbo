@@ -95,7 +95,8 @@
         MouseConstraint = Matter.MouseConstraint,
         Constraint = Matter.Constraint,
         Events = Matter.Events,
-        Bounds = Matter.Bounds
+        Bounds = Matter.Bounds,
+        Query = Matter.Query
         
     // create an engine
     var engine = Engine.create();
@@ -156,9 +157,9 @@
     let maxSpeedX = 15;
      // create two boxes and a ground
     var ground = Bodies.rectangle(400, 610, 500, 60, { isStatic: true, collisionFilter:{category: TILE_CATEGORY} });
-    var endpoint = Bodies.rectangle(150, 500, 60, 60, { isStatic: true });
-    var endpointdeco1 = Bodies.rectangle(150, 500, 40, 40, { isStatic: true });
-    var endpointdeco2 = Bodies.rectangle(150, 500, 20, 20, { isStatic: true });
+    var endpoint = Bodies.rectangle(150, 530, 60, 60, { isStatic: true, isSensor:true });
+    var endpointdeco1 = Bodies.rectangle(150, 530, 40, 40, { isStatic: true,isSensor: true});
+    var endpointdeco2 = Bodies.rectangle(150, 530, 20, 20, { isStatic: true,isSensor: true });
     
     const rotationSpeed = 0.02; // Adjust as needed
     setInterval(() => {
@@ -195,12 +196,36 @@
             }
                
             //Body.applyForce(playerBlob, {x: playerBlob.position.x, y: playerBlob.position.y}, {x: -force * 0.1, y: 0});
+        }else if(event.key == 's'){
+            let collisions = Query.collides(playerBlob, [endpoint])
+            if(collisions.length > 0){
+                createLevel(1, playerBlob, engine, render, canvas)
+            }
         }
 
         
 
         
     });
+
+    //label creation
+    let label = document.createElement('div');
+    label.style.position = 'absolute';
+    label.style.fontFamily = '"Comfortaa", sans-serif';
+    label.style.fontStyle = 'italic'
+    label.style.color = 'white'
+    label.style.top = '10px';
+    label.style.left = '10px';
+    label.style.display = 'none'; // Hide initially
+    document.body.appendChild(label);
+
+    // Function to update the label content and position
+    function updateLabel(x, y, text) {
+        label.innerHTML = text;
+        label.style.display = 'block';
+        label.style.left = (x + 50) + 'px'; // Offset to avoid overlapping with body
+        label.style.top = (y ) + 'px'; // Offset to avoid overlapping with body
+    }
 
     window.addEventListener('keyup', event => {
     if (event.key === 'd' || event.key === 'a') {
@@ -369,14 +394,13 @@
             y: vel.y 
         });
     }
-    if(!isOnGround){
-        for(let i =0;i < 9; i++){
-        //Body.setVelocity(playerBlob, { x: velJump * (1-dampening), y: playerBlob.velocity.y });
-        }
+    if(!(col == 0)){
+        isOnGround = true;
+    }else{
+        isOnGround = false;
     }
     
-    
-    console.log(isOnGround)
+
     updateEyes()
     });
 
@@ -432,6 +456,7 @@
         render.canvas.height = window.innerHeight;
 
     }
+    
     Events.on(engine, 'collisionStart', function(event){
 
 
@@ -440,38 +465,48 @@
 
                 if((pair.bodyA === playerBlob && pair.bodyB === endpoint) || 
                 (pair.bodyA === endpoint && pair.bodyB === playerBlob)) {
-                    createLevel(1, playerBlob, engine, render, canvas)
+                    updateLabel(endpoint.position.x, endpoint.position.x, "press s to enter")
                 }
         });
     });
 
+    Events.on(engine, 'collisionEnd', event => {
+    event.pairs.forEach(pair => {
+        if((pair.bodyA === playerBlob && pair.bodyB === endpoint) || 
+                (pair.bodyA === endpoint && pair.bodyB === playerBlob)) {
+                label.style.display = 'none'
+        }
+    });
+    });
     
+
+    let col = 0;
     Events.on(engine, 'collisionStart', event => {
     event.pairs.forEach(pair => {
         
         if (pair.bodyA.collisionFilter.category === TILE_CATEGORY && pair.bodyB === playerBlob|| pair.bodyA === playerBlob && pair.bodyB.collisionFilter.category === TILE_CATEGORY) {
             if(isBottomTouching(pair.bodyA, pair.bodyB, threshold) || isBottomTouching(pair.bodyB, pair.bodyA, threshold)){
+                col++
                 //if(isOnGround == false){
                 Body.setVelocity(playerBlob, { x: 0, y: 0});
 
                 //}
-                isOnGround = true;
             }    
         }
     });
     });
+
     Events.on(engine, 'collisionEnd', event => {
     event.pairs.forEach(pair => {
             if (pair.bodyA.collisionFilter.category === TILE_CATEGORY && pair.bodyB === playerBlob || pair.bodyA === playerBlob && pair.bodyB.collisionFilter.category === TILE_CATEGORY) {
                // if(isBottomTouching(pair.bodyA, pair.bodyB, threshold) || isBottomTouching(pair.bodyB, pair.bodyA, threshold)){
-
-                isOnGround = false;
+                col--
                 //}
         }
     });
     });
 
-    let threshold = 50;
+    let threshold = 10;
     function isBottomTouching(bodyA, bodyB, threshold) {
     // Get the vertices of bodyA
     const verticesA = bodyA.vertices;
@@ -489,8 +524,8 @@
 
 
     // add all of the bodies to the world
-    Composite.add(engine.world, [ground,canvasmouse, mConstraint ,playerBlob,endpoint,endpointdeco1, endpointdeco2]);
-   
+    Composite.add(engine.world, [ground,canvasmouse, mConstraint,endpoint,endpointdeco1, endpointdeco2]);
+    Composite.add(engine.world, [playerBlob]);
     // run the renderer
     Render.run(render);
 
