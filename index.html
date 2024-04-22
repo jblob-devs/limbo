@@ -1,65 +1,42 @@
 <!DOCTYPE html>
 <html>
-    <style>
-        #textbox,#title,#SwitchMode, .display, #textBox{
-            position: absolute;
-            color: #eee;
-            cursor: move;
-            font-family: "Comfortaa", sans-serif;
-            user-select: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }html, body {
-            position: relative;
-            height: 100%;
-            margin: 0;
-            overflow: hidden;
-        }button {
-            background-color: transparent;
-            background-repeat: no-repeat;
-            border: none;
-            cursor: pointer;
-            border: 2px solid white;
-            border-radius: 5px;
-            overflow: hidden;
-            color: #eee;
-            font-family: "Comfortaa", sans-serif;
-        }button:hover{
-            transform: scale(0.9);
-            transition: 0.5s ease;
-        }#textBox{
-            font-size: 5vh;
-        }.eye, .smile{
-            height: 5vh;
-        }
-    </style>
     <head>
+        <link rel="stylesheet" href="styles.css">
        <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
        <script src="matter.js"></script>
        <script src="levellogic.js"></script>
+       <script src="levels/level0.js"></script>
        <!--jquery script-->
        <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap" rel="stylesheet">
     </head>
     <!--The body is where the actual canvas is projected to-->
-    <canvas id="CANVAS"></canvas>
+    
     
     <body>
-        <div id="title" style="top:5vh;width:90vw">
-            <h1>Wagoogus</h1>
+        <div id="title" style="height:100%;width:100%;background-color:#14151f;">
+            <div style="position:absolute;top:20vh;left:25vw;"><span>W</span><span>a</span><span>g</span><span>o</span><span>o</span><span>g</span><span>u</span><span>s</span></div>
             <br>
-            
+            <button style="padding:5vh 8vw; font-size:4vh;height:5vh;top:35vh;left:35vw" class ="display" id="startButton" onclick="start()">Start</button>
         </div>
-        <div id="eyes" style="position:absolute;top:15vh;left:10vw">
+
+
+        <div id="playscreen">
+            <canvas id="CANVAS"></canvas>
+            <div id="textBox" style="top:15vh;left:25vw"></div>
+          
+        </div>
+        <!--
+            <div id="eyes" style="position:absolute;top:15vh;left:10vw">
             <img class="eye" src="images/eye.png" >
             <img class="eye" src="images/eye.png" >
             <br>
             <img class="smile" src="images/smile.png">        
         </div>
-        <div id="textBox" style="top:15vh;left:25vw"></div>
-        <button style="top:15vh;left:45vw" class ="display" id="startButton" onclick="start()">Start</button>
+        -->
+        
+       
         <!--
         <div id="SwitchMode" style="top:15vh;width:80vw">
             <button id="switchModeButton" onclick="switchPlacementMode()">Currently:<br> Place Mode</button>
@@ -69,10 +46,12 @@
 
     </body>
     <script>
+        $("#playscreen").hide()
+
         var mouseX = 0;
         var mouseY = 0
         var canvas = document.getElementById("CANVAS");
-        var mode = "place"
+        var mode = "none"
         var type = "tile"
 
         function getMousePosition(canvas, event) {
@@ -100,7 +79,6 @@
         
     // create an engine
     var engine = Engine.create();
-
     // create a renderer
     var render = Render.create({
         canvas: canvas,
@@ -116,7 +94,6 @@
        
     });
 
-
     canvas.width = window.innerWidth
     
     canvas.height = window.innerHeight
@@ -131,10 +108,7 @@
             wireframes: false
         } 
     };
-
     var canvasmouse = Mouse.create(render.canvas);
-
-    
     var mouseConstraintOptions = {
         mouse: canvasmouse,
         constraint:{
@@ -156,17 +130,8 @@
     let isOnGround = false;
     let maxSpeedX = 15;
      // create two boxes and a ground
-    var ground = Bodies.rectangle(400, 610, 500, 60, { isStatic: true, collisionFilter:{category: TILE_CATEGORY} });
-    var endpoint = Bodies.rectangle(150, 530, 60, 60, { isStatic: true, isSensor:true });
-    var endpointdeco1 = Bodies.rectangle(150, 530, 40, 40, { isStatic: true,isSensor: true});
-    var endpointdeco2 = Bodies.rectangle(150, 530, 20, 20, { isStatic: true,isSensor: true });
+   
     
-    const rotationSpeed = 0.02; // Adjust as needed
-    setInterval(() => {
-        Body.rotate(endpoint, rotationSpeed);
-        Body.rotate(endpointdeco1, rotationSpeed * 2);
-        Body.rotate(endpointdeco2, rotationSpeed * 3);
-    }, 1000 / 60);
     
     //var wagoogustext = Bodies.rectangle(800, 70, 200, 60, { isStatic: true });
     //var mouseBox = Bodies.rectangle(500, 100, 80, 80, {collisionFilter:{category: TILE_CATEGORY} });
@@ -179,33 +144,29 @@
       
         if(event.key == 'w' && isOnGround){
             velJump = playerBlob.velocity.x
-            Body.applyForce(playerBlob, {x: playerBlob.position.x, y: playerBlob.position.y}, {x: 0, y: -force*0.5});   
+            Body.applyForce(playerBlob, {x: playerBlob.position.x, y: playerBlob.position.y}, {x: 0, y: -force*0.55});   
         }else if(event.key == 'd' && playerBlob.velocity.x < maxSpeedX){
             if(isOnGround){
-                Body.setVelocity(playerBlob, { x: 4, y: playerBlob.velocity.y });
+                Body.setVelocity(playerBlob, { x: 5, y: playerBlob.velocity.y });
             }else{
-                Body.setVelocity(playerBlob, { x: 1, y: playerBlob.velocity.y });
+                Body.setVelocity(playerBlob, { x: 2, y: playerBlob.velocity.y });
             }
             
             //Body.applyForce(playerBlob, {x: playerBlob.position.x, y: playerBlob.position.y}, {x: force * 0.1, y: 0});
         }else if(event.key == 'a' && playerBlob.velocity.x > -maxSpeedX){
             if(isOnGround){
-                Body.setVelocity(playerBlob, { x: -4, y: playerBlob.velocity.y }); 
+                Body.setVelocity(playerBlob, { x: -5, y: playerBlob.velocity.y }); 
             }else{
-                Body.setVelocity(playerBlob, { x: -1, y: playerBlob.velocity.y }); 
+                Body.setVelocity(playerBlob, { x: -2, y: playerBlob.velocity.y }); 
             }
                
             //Body.applyForce(playerBlob, {x: playerBlob.position.x, y: playerBlob.position.y}, {x: -force * 0.1, y: 0});
         }else if(event.key == 's'){
             let collisions = Query.collides(playerBlob, [endpoint])
             if(collisions.length > 0){
-                createLevel(1, playerBlob, engine, render, canvas)
+                createLevel(1, playerBlob, engine, render)
             }
         }
-
-        
-
-        
     });
 
     //label creation
@@ -310,13 +271,14 @@
     }
 
     canvas.addEventListener("mousedown", function (e) {
-
+        getCorrectedMousePosition(e)
+        console.log(mouseX, mouseY)
         if(mode == "place"){
         //var correctedMouse = getCorrectedMousePosition(e);
         //mouseX = correctedMouse.x;
         //mouseY = correctedMouse.y;
-        getCorrectedMousePosition(e)
-        console.log(mouseX, mouseY)
+       
+        
         var placementObj = null;
         if(type == "tile"){
             placementObj = Bodies.rectangle(mouseX, mouseY, 80, 80, {isStatic: true, collisionFilter:{category:TILE_CATEGORY}});
@@ -336,6 +298,23 @@
             document.getElementById("switchModeButton").innerHTML  = "Currently: <br> Place Mode"
         }
     }
+
+    let targetZoom = 1;
+    let zoom = 1;
+    let zoomSpeed = 0.1;
+    function setZoom(zoomvalue) {
+        targetZoom = zoomvalue;
+        smoothZoom(targetZoom)
+    }
+    
+
+    function smoothZoom() {
+    var zoomDirection = Math.sign(targetZoom - zoom); // Determine zoom direction (+1 for zoom in, -1 for zoom out)
+    zoom += zoomDirection * zoomSpeed; // Increment or decrement zoom level based on direction
+    if ((zoomDirection > 0 && zoom >= targetZoom) || (zoomDirection < 0 && zoom <= targetZoom)) {
+        zoom = targetZoom; // Clamp to target zoom if reached or overshot
+    }
+}
 
     function switchTypeMode(){
         if(type == "tile"){
@@ -361,17 +340,12 @@
         Bounds.shift(render.bounds,
         {
             
-            x: playerBlob.position.x - window.innerWidth/2,
-            y: playerBlob.position.y - window.innerHeight/2
+            x: (playerBlob.position.x - window.innerWidth/2) /zoom,
+            y: (playerBlob.position.y - window.innerHeight/2) /zoom
             
         });
 
-        //Mouse.setOffset(mConstraint.mouse, {x: playerBlob.bodies[4].position.x + window.innerWidth / 2, y: playerBlob.bodies[4].position.y + window.innerHeight / 2});
-        
-        //console.log(cameraOffset.x + ", " + cameraOffset.y)
-        //var correctedMouse = getCorrectedMousePosition(e);
-        //mouseX = correctedMouse.x;
-        //mouseY = correctedMouse.y;
+
         canvasmouse.position.x = mouseX
         canvasmouse.position.y = mouseY
 
@@ -381,8 +355,9 @@
             Body.setPosition(playerBlob, {x:360, y:560})
             Body.setVelocity(playerBlob, {x:0, y:0})
         }
+
         playerBlob.density = 0.05; // Adjust density as needed
-        playerBlob.frictionAir = 0.0001; // Adjust air friction as needed
+        playerBlob.frictionAir = 0.001; // Adjust air friction as needed
         playerBlob.gravityScale = 1; // Adjust gravity scale as needed
     
     let vel = playerBlob.velocity;
@@ -400,7 +375,7 @@
         isOnGround = false;
     }
     
-
+    console.log(playerBlob.frictionStatic)
     updateEyes()
     });
 
@@ -457,27 +432,6 @@
 
     }
     
-    Events.on(engine, 'collisionStart', function(event){
-
-
-        //checks if a playerbody and the end point have collided
-        event.pairs.forEach(pair => {
-
-                if((pair.bodyA === playerBlob && pair.bodyB === endpoint) || 
-                (pair.bodyA === endpoint && pair.bodyB === playerBlob)) {
-                    updateLabel(endpoint.position.x, endpoint.position.x, "press s to enter")
-                }
-        });
-    });
-
-    Events.on(engine, 'collisionEnd', event => {
-    event.pairs.forEach(pair => {
-        if((pair.bodyA === playerBlob && pair.bodyB === endpoint) || 
-                (pair.bodyA === endpoint && pair.bodyB === playerBlob)) {
-                label.style.display = 'none'
-        }
-    });
-    });
     
 
     let col = 0;
@@ -521,11 +475,12 @@
     return lowestY >= topBoundary - threshold;
 }
     
-
-
     // add all of the bodies to the world
-    Composite.add(engine.world, [ground,canvasmouse, mConstraint,endpoint,endpointdeco1, endpointdeco2]);
+    Composite.add(engine.world, [canvasmouse, mConstraint]);
+    createLevel(0, playerBlob, engine, render)
     Composite.add(engine.world, [playerBlob]);
+    Body.setPosition(playerBlob, {x:360, y:560})
+    
     // run the renderer
     Render.run(render);
 

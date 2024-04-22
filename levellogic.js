@@ -62,25 +62,92 @@ let tutorialDialogue = async()=>{
 
 function start(){
     $("#startButton").hide();
-    $("#title").slideUp();
-    tutorialDialogue();
+    $("#title").hide();
+    $("#playscreen").show()
+    //tutorialDialogue();
+}
+var endpoint;
+
+function createEndpoint(posX, posY){
+  //150 530
+  endpoint = Bodies.rectangle(posX, posY, 40, 40, { isStatic: true, isSensor:true, render:{strokeStyle:'skyblue'} });
+  var endpointdeco1 = Bodies.rectangle(posX, posY, 30, 30, { isStatic: true,isSensor: true, render:{strokeStyle:'skyblue'}});
+  var endpointdeco2 = Bodies.rectangle(posX, posY, 20, 20, { isStatic: true,isSensor: true, render:{strokeStyle:'skyblue'} });
+  let rotationSpeed = 0.02; // Adjust as needed
+    setInterval(() => {
+        Body.rotate(endpoint, rotationSpeed);
+        Body.rotate(endpointdeco1, rotationSpeed * 2);
+        Body.rotate(endpointdeco2, rotationSpeed * 3);
+    }, 1000 / 60);
+    Events.on(engine, 'collisionStart', function(event){
+      //checks if a playerbody and the end point have collided
+      event.pairs.forEach(pair => {
+
+              if((pair.bodyA === playerBlob && pair.bodyB === endpoint) || 
+              (pair.bodyA === endpoint && pair.bodyB === playerBlob)) {
+                  updateLabel(endpoint.position.x, endpoint.position.x, "press s to enter")
+              }
+      });
+  });
+
+  Events.on(engine, 'collisionEnd', event => {
+  event.pairs.forEach(pair => {
+      if((pair.bodyA === playerBlob && pair.bodyB === endpoint) || 
+              (pair.bodyA === endpoint && pair.bodyB === playerBlob)) {
+              label.style.display = 'none'
+      }
+  });
+  });
+  Composite.add(engine.world, [endpoint, endpointdeco1, endpointdeco2])
 }
 
+function createTile(posX, posY, length, width){
+  //400 610
+  var tile = Bodies.rectangle(posX, posY, length, width, { isStatic: true, collisionFilter:{category: TILE_CATEGORY} });
+    Composite.add(engine.world, tile)
+}
 
-function createLevel(number, player, engine, render, canvas){
+function createSign(posX, posY, text){
+  var sign = Bodies.rectangle(posX, posY, 30, 30, { isStatic: true,isSensor: true, render:{strokeStyle:'skyblue'}});
+  Events.on(engine, 'collisionStart', function(event){
+    //checks if a playerbody and the end point have collided
+    event.pairs.forEach(pair => {
+
+            if((pair.bodyA === playerBlob && pair.bodyB === sign) || 
+            (pair.bodyA === sign && pair.bodyB === playerBlob)) {
+                updateLabel(posX, posY, text)
+                setZoom(3); 
+            }
+    });
+    Events.on(engine, 'collisionEnd', event => {
+      event.pairs.forEach(pair => {
+          if((pair.bodyA === playerBlob && pair.bodyB === sign) || 
+                  (pair.bodyA === sign && pair.bodyB === playerBlob)) {
+                  label.style.display = 'none'
+                  setZoom(1);
+          }
+      });
+      });
+});
+Composite.add(engine.world, [sign])
+}
+
+function createLevel(number, player, engine, render){
     Composite.clear(engine.world);
     Render.stop(render);
- 
+  if(number == 0){
+
+    runLevel0();
+
+  }
+
   if(number == 1){
       let ground = Bodies.rectangle(250, 600, 610, 50, { isStatic: true, collisionFilter:{category: TILE_CATEGORY} });
       Composite.add(engine.world, [ground, player])
   }
 
-
   Render.run(render);
-  let runner = Runner.create();
-
       // run the engine
-  Runner.run(runner, engine);
+  //Runner.run(runner, engine);
 
   }
