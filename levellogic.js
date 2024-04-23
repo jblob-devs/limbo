@@ -68,12 +68,13 @@ function start(){
 }
 var endpoint;
 
+let rotationSpeed = 0.02;
 function createEndpoint(posX, posY){
   //150 530
   endpoint = Bodies.rectangle(posX, posY, 40, 40, { isStatic: true, isSensor:true, render:{strokeStyle:'skyblue'} });
   var endpointdeco1 = Bodies.rectangle(posX, posY, 30, 30, { isStatic: true,isSensor: true, render:{strokeStyle:'skyblue'}});
   var endpointdeco2 = Bodies.rectangle(posX, posY, 20, 20, { isStatic: true,isSensor: true, render:{strokeStyle:'skyblue'} });
-  let rotationSpeed = 0.02; // Adjust as needed
+   // Adjust as needed
     setInterval(() => {
         Body.rotate(endpoint, rotationSpeed);
         Body.rotate(endpointdeco1, rotationSpeed * 2);
@@ -85,7 +86,7 @@ function createEndpoint(posX, posY){
 
               if((pair.bodyA === playerBlob && pair.bodyB === endpoint) || 
               (pair.bodyA === endpoint && pair.bodyB === playerBlob)) {
-                  updateLabel(endpoint.position.x, endpoint.position.x, "press s to enter")
+                  updateLabel(posX, posY, "press s to enter")
               }
       });
   });
@@ -107,8 +108,11 @@ function createTile(posX, posY, length, width){
     Composite.add(engine.world, tile)
 }
 
+let rotater
 function createSign(posX, posY, text){
-  var sign = Bodies.rectangle(posX, posY, 30, 30, { isStatic: true,isSensor: true, render:{strokeStyle:'skyblue'}});
+  var sign = Bodies.circle(posX, posY, 15, { isStatic: true,isSensor: true, render:{strokeStyle:'#eda424'}});
+  let exclam1 = Bodies.rectangle(posX,posY -5, 2, 10,{ isStatic: true,isSensor: true, render:{strokeStyle:'#eda424', fillStyle: '#eda424'}})
+  let exclam2 = Bodies.circle(posX,posY + 7, 2,{ isStatic: true,isSensor: true, render:{strokeStyle:'#eda424' , fillStyle: '#eda424'}})
   Events.on(engine, 'collisionStart', function(event){
     //checks if a playerbody and the end point have collided
     event.pairs.forEach(pair => {
@@ -116,20 +120,21 @@ function createSign(posX, posY, text){
             if((pair.bodyA === playerBlob && pair.bodyB === sign) || 
             (pair.bodyA === sign && pair.bodyB === playerBlob)) {
                 updateLabel(posX, posY, text)
-                setZoom(3); 
+                label.style.display = 'absolute'
+                //smoothZoomIn(engine.world, 1.1, 1000)
             }
     });
-    Events.on(engine, 'collisionEnd', event => {
-      event.pairs.forEach(pair => {
-          if((pair.bodyA === playerBlob && pair.bodyB === sign) || 
-                  (pair.bodyA === sign && pair.bodyB === playerBlob)) {
-                  label.style.display = 'none'
-                  setZoom(1);
-          }
-      });
-      });
 });
-Composite.add(engine.world, [sign])
+Events.on(engine, 'collisionEnd', event => {
+  event.pairs.forEach(pair => {
+      if((pair.bodyA === playerBlob && pair.bodyB === sign) || 
+              (pair.bodyA === sign && pair.bodyB === playerBlob)) {
+              label.style.display = 'none'
+              //smoothZoomIn(engine.world, 1, 1000)
+      }
+  });
+  });
+Composite.add(engine.world, [sign, exclam1, exclam2])
 }
 
 function createLevel(number, player, engine, render){
@@ -142,10 +147,9 @@ function createLevel(number, player, engine, render){
   }
 
   if(number == 1){
-      let ground = Bodies.rectangle(250, 600, 610, 50, { isStatic: true, collisionFilter:{category: TILE_CATEGORY} });
-      Composite.add(engine.world, [ground, player])
+      runLevel1()
   }
-
+  Composite.add(engine.world, player)
   Render.run(render);
       // run the engine
   //Runner.run(runner, engine);

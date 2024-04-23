@@ -16,7 +16,7 @@
     
     <body>
         <div id="title" style="height:100%;width:100%;background-color:#14151f;">
-            <div style="position:absolute;top:20vh;left:25vw;"><span>W</span><span>a</span><span>g</span><span>o</span><span>o</span><span>g</span><span>u</span><span>s</span></div>
+            <div style="position:absolute;top:20vh;left:40vw;"><span>L</span><span>i</span><span>m</span><span>b</span><span>o</span></div>
             <br>
             <button style="padding:5vh 8vw; font-size:4vh;height:5vh;top:35vh;left:35vw" class ="display" id="startButton" onclick="start()">Start</button>
         </div>
@@ -142,10 +142,10 @@
     document.addEventListener('keydown', (event)=> {  
         const force = 0.05 * (playerBlob.mass);  
       
-        if(event.key == 'w' && isOnGround){
+        if((event.key == 'w' || event.key == 'ArrowUp') && isOnGround){
             velJump = playerBlob.velocity.x
             Body.applyForce(playerBlob, {x: playerBlob.position.x, y: playerBlob.position.y}, {x: 0, y: -force*0.55});   
-        }else if(event.key == 'd' && playerBlob.velocity.x < maxSpeedX){
+        }else if((event.key == 'd' || event.key =='ArrowRight') && playerBlob.velocity.x < maxSpeedX){
             if(isOnGround){
                 Body.setVelocity(playerBlob, { x: 5, y: playerBlob.velocity.y });
             }else{
@@ -153,7 +153,7 @@
             }
             
             //Body.applyForce(playerBlob, {x: playerBlob.position.x, y: playerBlob.position.y}, {x: force * 0.1, y: 0});
-        }else if(event.key == 'a' && playerBlob.velocity.x > -maxSpeedX){
+        }else if((event.key == 'a' || event.key == 'ArrowLeft') && playerBlob.velocity.x > -maxSpeedX){
             if(isOnGround){
                 Body.setVelocity(playerBlob, { x: -5, y: playerBlob.velocity.y }); 
             }else{
@@ -161,7 +161,7 @@
             }
                
             //Body.applyForce(playerBlob, {x: playerBlob.position.x, y: playerBlob.position.y}, {x: -force * 0.1, y: 0});
-        }else if(event.key == 's'){
+        }else if(event.key == 's' || event.key == 'ArrowDown'){
             let collisions = Query.collides(playerBlob, [endpoint])
             if(collisions.length > 0){
                 createLevel(1, playerBlob, engine, render)
@@ -169,27 +169,38 @@
         }
     });
 
-    //label creation
+    
+//label creation
     let label = document.createElement('div');
-    label.style.position = 'absolute';
+    
     label.style.fontFamily = '"Comfortaa", sans-serif';
+    label.style.position = 'absolute';
     label.style.fontStyle = 'italic'
     label.style.color = 'white'
-    label.style.top = '10px';
-    label.style.left = '10px';
+    //label.style.top = '10px';
+    //label.style.left = '10px';
     label.style.display = 'none'; // Hide initially
     document.body.appendChild(label);
 
-    // Function to update the label content and position
+  
     function updateLabel(x, y, text) {
+        let canvasRect = render.canvas.getBoundingClientRect();
+        let canvasX = x - canvasRect.left ;
+        let canvasY = y - canvasRect.top;
+
+   
+        let offsetX = 0; // Offset from the left
+        let offsetY = 0; // Offset from the top
+
         label.innerHTML = text;
-        label.style.display = 'block';
-        label.style.left = (x + 50) + 'px'; // Offset to avoid overlapping with body
-        label.style.top = (y ) + 'px'; // Offset to avoid overlapping with body
+        label.style.display = 'block'
+        label.style.position = 'absolute';
+        label.style.left = (canvasX + offsetX) + 'px';
+        label.style.top = (canvasY + offsetY) + 'px';
     }
 
     window.addEventListener('keyup', event => {
-    if (event.key === 'd' || event.key === 'a') {
+    if ((event.key === 'd' || event.key === 'ArrowRight') || (event.key === 'a' || event.key === 'ArrowLeft')) {
         if(!isOnGround){
             //velJump = playerBlob.velocity.x
         }else{
@@ -299,22 +310,6 @@
         }
     }
 
-    let targetZoom = 1;
-    let zoom = 1;
-    let zoomSpeed = 0.1;
-    function setZoom(zoomvalue) {
-        targetZoom = zoomvalue;
-        smoothZoom(targetZoom)
-    }
-    
-
-    function smoothZoom() {
-    var zoomDirection = Math.sign(targetZoom - zoom); // Determine zoom direction (+1 for zoom in, -1 for zoom out)
-    zoom += zoomDirection * zoomSpeed; // Increment or decrement zoom level based on direction
-    if ((zoomDirection > 0 && zoom >= targetZoom) || (zoomDirection < 0 && zoom <= targetZoom)) {
-        zoom = targetZoom; // Clamp to target zoom if reached or overshot
-    }
-}
 
     function switchTypeMode(){
         if(type == "tile"){
@@ -340,8 +335,8 @@
         Bounds.shift(render.bounds,
         {
             
-            x: (playerBlob.position.x - window.innerWidth/2) /zoom,
-            y: (playerBlob.position.y - window.innerHeight/2) /zoom
+            x: playerBlob.position.x - window.innerWidth/2 ,
+            y: playerBlob.position.y - window.innerHeight/2 
             
         });
 
@@ -374,10 +369,39 @@
     }else{
         isOnGround = false;
     }
-    
-    console.log(playerBlob.frictionStatic)
+
     updateEyes()
     });
+/*
+    function smoothZoomIn(world, scale, duration) {
+    const startTime = Date.now();
+
+    function updateZoom() {
+        const currentTime = Date.now();
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+
+        world.bodies.forEach(body => {
+            if (body.circleRadius) {
+                const originalRadius = body.render.originalRadius || body.circleRadius;
+                body.circleRadius = originalRadius * (1 + (scale - 1) * progress);
+            } else if (body.vertices) {
+                const originalVertices = body.render.originalVertices || body.vertices.map(vertex => ({ x: vertex.x, y: vertex.y }));
+                body.vertices.forEach((vertex, index) => {
+                    vertex.x = originalVertices[index].x * (1 + (scale - 1) * progress);
+                    vertex.y = originalVertices[index].y * (1 + (scale - 1) * progress);
+                });
+            }
+        });
+
+        if (progress < 1) {
+            requestAnimationFrame(updateZoom);
+        }
+    }
+
+    updateZoom();
+    }
+*/
 
 
     //sets soft body position 
@@ -433,7 +457,6 @@
     }
     
     
-
     let col = 0;
     Events.on(engine, 'collisionStart', event => {
     event.pairs.forEach(pair => {
@@ -478,7 +501,7 @@
     // add all of the bodies to the world
     Composite.add(engine.world, [canvasmouse, mConstraint]);
     createLevel(0, playerBlob, engine, render)
-    Composite.add(engine.world, [playerBlob]);
+    //Composite.add(engine.world, [playerBlob]);
     Body.setPosition(playerBlob, {x:360, y:560})
     
     // run the renderer

@@ -6,3 +6,14 @@ function runLevel0(){
 
     createEndpoint(420, 390)
 }
+
+
+///all levels are temp stored here until better thing can be found ;/
+function runLevel1(){
+    createTile(400, 610, 200, 60)
+    createTile(600, 610, 50, 60)
+    createTile(800, 540, 80, 30)
+    createSign(800, 500, "Fall too far and the void consumes you")
+
+    createEndpoint(420, 390)
+}
