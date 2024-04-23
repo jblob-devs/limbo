@@ -67,13 +67,21 @@ function start(){
     //tutorialDialogue();
 }
 var endpoint;
+var endpointdeco1;
+var endpointdeco2;
+
+  function removeEndpoint(){
+    Composite.remove(engine.world, endpoint)
+    Composite.remove(engine.world, endpointdeco1)
+    Composite.remove(engine.world, endpointdeco2)
+  }
 
 let rotationSpeed = 0.02;
 function createEndpoint(posX, posY){
   //150 530
   endpoint = Bodies.rectangle(posX, posY, 40, 40, { isStatic: true, isSensor:true, render:{strokeStyle:'skyblue'} });
-  var endpointdeco1 = Bodies.rectangle(posX, posY, 30, 30, { isStatic: true,isSensor: true, render:{strokeStyle:'skyblue'}});
-  var endpointdeco2 = Bodies.rectangle(posX, posY, 20, 20, { isStatic: true,isSensor: true, render:{strokeStyle:'skyblue'} });
+  endpointdeco1 = Bodies.rectangle(posX, posY, 30, 30, { isStatic: true,isSensor: true, render:{strokeStyle:'skyblue'}});
+  endpointdeco2 = Bodies.rectangle(posX, posY, 20, 20, { isStatic: true,isSensor: true, render:{strokeStyle:'skyblue'} });
    // Adjust as needed
     setInterval(() => {
         Body.rotate(endpoint, rotationSpeed);
@@ -99,6 +107,8 @@ function createEndpoint(posX, posY){
       }
   });
   });
+
+
   Composite.add(engine.world, [endpoint, endpointdeco1, endpointdeco2])
 }
 
@@ -108,7 +118,6 @@ function createTile(posX, posY, length, width){
     Composite.add(engine.world, tile)
 }
 
-let rotater
 function createSign(posX, posY, text){
   var sign = Bodies.circle(posX, posY, 15, { isStatic: true,isSensor: true, render:{strokeStyle:'#eda424'}});
   let exclam1 = Bodies.rectangle(posX,posY -5, 2, 10,{ isStatic: true,isSensor: true, render:{strokeStyle:'#eda424', fillStyle: '#eda424'}})
@@ -119,6 +128,7 @@ function createSign(posX, posY, text){
 
             if((pair.bodyA === playerBlob && pair.bodyB === sign) || 
             (pair.bodyA === sign && pair.bodyB === playerBlob)) {
+              console.log(posX, posY)
                 updateLabel(posX, posY, text)
                 label.style.display = 'absolute'
                 //smoothZoomIn(engine.world, 1.1, 1000)
@@ -137,17 +147,17 @@ Events.on(engine, 'collisionEnd', event => {
 Composite.add(engine.world, [sign, exclam1, exclam2])
 }
 
+
+let curLevel = 0;
+
 function createLevel(number, player, engine, render){
     Composite.clear(engine.world);
     Render.stop(render);
-  if(number == 0){
-
-    runLevel0();
-
-  }
-
-  if(number == 1){
-      runLevel1()
+    let levelName = `runLevel${number}`
+  if(typeof window[levelName] === 'function'){
+    window[levelName]();
+  }else{
+      createLobby()
   }
   Composite.add(engine.world, player)
   Render.run(render);

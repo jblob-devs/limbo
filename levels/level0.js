@@ -1,3 +1,8 @@
+function createLobby(){
+    createTile(400, 610, 200, 60)
+}
+
+
 function runLevel0(){
     createTile(400, 610, 200, 60)
     createTile(180, 530, 100, 60)
@@ -13,7 +18,10 @@ function runLevel1(){
     createTile(400, 610, 200, 60)
     createTile(600, 610, 50, 60)
     createTile(800, 540, 80, 30)
-    createSign(800, 500, "Fall too far and the void consumes you")
+    createSign(800, 500, "Fall too far...")
+    createTile(1000, 500, 80, 30)
+    createSign(1000, 470, "...and the void consumes you")
+    createTile(1210, 410, 100, 20)
 
-    createEndpoint(420, 390)
+    createEndpoint(1210, 370)
 }

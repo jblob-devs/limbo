@@ -164,7 +164,9 @@
         }else if(event.key == 's' || event.key == 'ArrowDown'){
             let collisions = Query.collides(playerBlob, [endpoint])
             if(collisions.length > 0){
-                createLevel(1, playerBlob, engine, render)
+                curLevel++
+                createLevel(curLevel, playerBlob, engine, render)
+                console.log(collisions.length)
             }
         }
     });
@@ -182,21 +184,24 @@
     label.style.display = 'none'; // Hide initially
     document.body.appendChild(label);
 
-  
     function updateLabel(x, y, text) {
+        x -= cameraOffset.x
+        y -= cameraOffset.y
         let canvasRect = render.canvas.getBoundingClientRect();
-        let canvasX = x - canvasRect.left ;
-        let canvasY = y - canvasRect.top;
-
-   
-        let offsetX = 0; // Offset from the left
-        let offsetY = 0; // Offset from the top
+        let scaleX =  canvasRect.width /render.canvas.width;
+        let scaleY = canvasRect.height /render.canvas.height;
+        let canvasX = x * scaleX + canvasRect.left -20;
+        let canvasY = y * scaleY + canvasRect.top - 70;
+        let labelWidth = label.offsetWidth;
+        let labelHeight = label.offsetHeight;
 
         label.innerHTML = text;
         label.style.display = 'block'
         label.style.position = 'absolute';
-        label.style.left = (canvasX + offsetX) + 'px';
-        label.style.top = (canvasY + offsetY) + 'px';
+        label.style.left = `${canvasX -labelWidth/2}px`;
+        label.style.top = `${canvasY - labelHeight/2}px`;
+        label.style.display = "block";
+        console.log(canvasX  +"+" +canvasY)
     }
 
     window.addEventListener('keyup', event => {
