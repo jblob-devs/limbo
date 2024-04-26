@@ -184,7 +184,6 @@ function changeBodySize(body) {
     createTile(newx, newy, result.value[0], result.value[1] )
   });
 }
-
 function leveleditplacetile(x, y, h ,w){
   if(type == "tile"){
     createTile(x,y,h ,w)

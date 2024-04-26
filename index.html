@@ -69,75 +69,6 @@
         var mouseY = 0
         var canvas = document.getElementById("CANVAS");
         
-                
-        //level editor code
-        canvas.addEventListener("mousedown", function (e) {
-            if(event.button == 0){
-                getCorrectedMousePosition(e)
-        console.log(mouseX, mouseY)
-        if(mode == "place"){
-            leveleditplacetile(mouseX,mouseY, 30 ,30)
-            
-        }
-
-            }
-       
-        }); 
-
-        function downloadLevelLayout(){
-            let array =[];
-            let bodies = Composite.allBodies(engine.world)
-            bodies.forEach(function(body){
-                if(body.customData.type == 'tile' || body.customData.type == 'killtile'){
-                    let len  =  body.bounds.max.x - body.bounds.min.x
-                    let width  = body.bounds.max.y - body.bounds.min.y
-                    let arr = [body.customData.type, body.position.x, body.position.y,len , width]
-                    array.push(arr)
-                }
-            })
-            console.log(array)
-            download(array, "LimboLevelLayout", "txt")
-        }
-
-        function download(data, filename, type) {
-            var file = new Blob([data], {type: type});
-            if (window.navigator.msSaveOrOpenBlob) // IE10+
-                window.navigator.msSaveOrOpenBlob(file, filename);
-            else { // Others
-                var a = document.createElement("a"),
-                        url = URL.createObjectURL(file);
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(function() {
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);  
-                }, 0); 
-            }
-        }
-
-        canvas.addEventListener('contextmenu', function(event) {
-            getCorrectedMousePosition(event)
-            event.preventDefault(); // Prevent the default context menu
-            var bodies = Composite.allBodies(engine.world);
-            var clickedBody = Query.point(bodies, { x: mouseX, y: mouseY })[0];
-            console.log(Query.point(bodies, { x: mouseX, y: mouseY }))
-            if (clickedBody) {
-                changeBodySize(clickedBody);
-            }
-
-            return false;
-        }, false);
-
-
-        function getMousePosition(canvas, event) {
-            let rect = canvas.getBoundingClientRect();
-            let x = event.clientX - rect.left;
-            let y = event.clientY - rect.top;
-            mouseX = x;
-            mouseY = y;
-        }
 
     // module aliases
     var Engine = Matter.Engine,
@@ -244,7 +175,91 @@
         }
     });
 
-    
+        let isDragging = false;
+        let boxoutline;
+        //level editor code
+        canvas.addEventListener("mousedown", function (e) {
+            if(event.button == 0){
+                isDragging = true;
+                getCorrectedMousePosition(e) 
+                console.log(mouseX, mouseY)
+                if(mode == "place"){
+                    //leveleditplacetile(mouseX,mouseY, 30 ,30)
+                    boxoutline = Bodies.rectangle(mouseX, mouseY, 1, 1, { isStatic: true });
+                }
+            }
+       
+        }); 
+        canvas.addEventListener("mousemove", function (e) {
+            if (isDragging) {
+                getCorrectedMousePosition(e) 
+
+                // Update the size and position of the outline
+                const width = mouseX - startX;
+                const height = mouseY - startY;
+                Body.scale(boxoutline, width / boxoutline.bounds.width, height / boxoutline.bounds.height);
+                Body.setPosition(boxoutline, { x: startX + width / 2, y: startY + height / 2 });
+            }
+        }); 
+        canvas.addEventListener("mouseup", function (e) {
+        if (isDragging) {
+                // Convert the outline into a box
+                createTile(boxoutline.position.x,boxoutline.position.y,  boxoutline.bounds.width, boxoutline.bounds.height)
+                // Remove the outline
+                Composite.remove(engine.world, boxoutline);
+                outline = null;
+
+                isDragging = false;
+            }
+        }); 
+        
+
+        function downloadLevelLayout(){
+            let array =[];
+            let bodies = Composite.allBodies(engine.world)
+            bodies.forEach(function(body){
+                if(body.customData.type == 'tile' || body.customData.type == 'killtile'){
+                    let len  =  body.bounds.max.x - body.bounds.min.x
+                    let width  = body.bounds.max.y - body.bounds.min.y
+                    let arr = [body.customData.type, body.position.x, body.position.y,len , width]
+                    array.push(arr)
+                }
+            })
+            console.log(array)
+            download(array, "LimboLevelLayout", "txt")
+        }
+
+        function download(data, filename, type) {
+            var file = new Blob([data], {type: type});
+            if (window.navigator.msSaveOrOpenBlob) // IE10+
+                window.navigator.msSaveOrOpenBlob(file, filename);
+            else { // Others
+                var a = document.createElement("a"),
+                        url = URL.createObjectURL(file);
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(function() {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);  
+                }, 0); 
+            }
+        }
+
+        canvas.addEventListener('contextmenu', function(event) {
+            getCorrectedMousePosition(event)
+            event.preventDefault(); // Prevent the default context menu
+            var bodies = Composite.allBodies(engine.world);
+            var clickedBody = Query.point(bodies, { x: mouseX, y: mouseY })[0];
+            console.log(Query.point(bodies, { x: mouseX, y: mouseY }))
+            if (clickedBody) {
+                changeBodySize(clickedBody);
+            }
+
+            return false;
+        }, false);
+
 //label creation
     let label = document.createElement('div');
     
