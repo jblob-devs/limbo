@@ -8,17 +8,25 @@ let playerRespawn = {x: 0, y:0}
 
 const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
 
-
-function pRespawn(x,y){
+function setRespawn(x,y){
   playerRespawn.x = x
   playerRespawn.y = y
-  Events.on(engine, 'beforeUpdate', function(e) {
-  if(playerBlob.position.y > 800){
-    Body.setPosition(playerBlob, {x:playerRespawn.x, y:playerRespawn.y})
-    Body.setVelocity(playerBlob, {x:0, y:0})
-  }
-});
+}
+function pRespawn(){
 
+  Body.setPosition(playerBlob, {x:playerRespawn.x, y:playerRespawn.y})
+  Body.setVelocity(playerBlob, {x:0, y:0})
+  playerDead = false;
+}
+
+function checkDeaths(){
+  Events.on(engine, 'beforeUpdate', function(e) {
+    if(playerBlob.position.y > 800){
+      killPlayer()
+    }
+
+  });
+  
 }
 
 function setPlayerPosition(thisx,thisy){
@@ -85,6 +93,11 @@ function start(where){
     //tutorialDialogue();
     if(where == 'lobby'){
       createLevel('lobby', playerBlob, engine, render)
+    }else if(where == 'levelEdit'){
+      editon = true;
+      Composite.clear(engine.world);
+      mode = "place"
+      Composite.add(engine.world,[canvasmouse, mConstraint] )
     }else{
       createLevel(0, playerBlob, engine, render)
       Body.setPosition(playerBlob, {x:360, y:560})
@@ -110,6 +123,7 @@ function createLevel(number, player, engine, render){
   }
   Composite.add(engine.world, player)
   Render.run(render);
+  checkDeaths()
       // run the engine
   //Runner.run(runner, engine);
 

@@ -24,6 +24,7 @@
             <br>
             <button style="padding:5vh 8vw; font-size:4vh;height:5vh;top:35vh;left:35vw" class ="display" id="startButton" onclick="start('level0')">Start</button>
             <button style="padding:5vh 8vw; font-size:4vh;height:5vh;top:47vh;left:35vw" class ="display" id="lobbyButton" onclick="start('lobby')">Lobby</button>
+            <button style="padding:5vh 8vw; font-size:4vh;height:5vh;top:60vh;left:35vw" class ="display" id="levelEditorButton" onclick="start('levelEdit')">Level Editor</button>
         </div>
 
 
@@ -41,13 +42,24 @@
         </div>
         -->
         
-       
-        <!--
+       <!--level editor panel-->
         <div id="SwitchMode" style="top:15vh;width:80vw">
             <button id="switchModeButton" onclick="switchPlacementMode()">Currently:<br> Place Mode</button>
             <button id="switchTypeButton" onclick="switchTypeMode()">Currently: <br> Tile</button>
+            <button onclick="Swal.fire({
+                title:'How to use the editor:',
+                html: 'Left-Click: place tile <br><br> Right-Click: change tile dimensions <br> <br> Click the Download button to download a copy of your level layout',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: true,
+                confirmButtonText: 'Ok',
+                font: 'Comfortaa, sans-serif',
+                background: '#14151f',
+                color: 'white'
+              })">How to use</button>
+              <button id="downloadButton" onclick="downloadLevelLayout()">Download Level Layout</button>
         </div>
-    -->
+        </div>
 
     </body>
     <script>
@@ -56,8 +68,68 @@
         var mouseX = 0;
         var mouseY = 0
         var canvas = document.getElementById("CANVAS");
-        var mode = "none"
-        var type = "tile"
+        
+                
+        //level editor code
+        canvas.addEventListener("mousedown", function (e) {
+            if(event.button == 0){
+                getCorrectedMousePosition(e)
+        console.log(mouseX, mouseY)
+        if(mode == "place"){
+            leveleditplacetile(mouseX,mouseY, 30 ,30)
+            
+        }
+
+            }
+       
+        }); 
+
+        function downloadLevelLayout(){
+            let array =[];
+            let bodies = Composite.allBodies(engine.world)
+            bodies.forEach(function(body){
+                if(body.customData.type == 'tile' || body.customData.type == 'killtile'){
+                    let len  =  body.bounds.max.x - body.bounds.min.x
+                    let width  = body.bounds.max.y - body.bounds.min.y
+                    let arr = [body.customData.type, body.position.x, body.position.y,len , width]
+                    array.push(arr)
+                }
+            })
+            console.log(array)
+            download(array, "LimboLevelLayout", "txt")
+        }
+
+        function download(data, filename, type) {
+            var file = new Blob([data], {type: type});
+            if (window.navigator.msSaveOrOpenBlob) // IE10+
+                window.navigator.msSaveOrOpenBlob(file, filename);
+            else { // Others
+                var a = document.createElement("a"),
+                        url = URL.createObjectURL(file);
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(function() {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);  
+                }, 0); 
+            }
+        }
+
+        canvas.addEventListener('contextmenu', function(event) {
+            getCorrectedMousePosition(event)
+            event.preventDefault(); // Prevent the default context menu
+            var bodies = Composite.allBodies(engine.world);
+            var clickedBody = Query.point(bodies, { x: mouseX, y: mouseY })[0];
+            console.log(Query.point(bodies, { x: mouseX, y: mouseY }))
+            if (clickedBody) {
+                changeBodySize(clickedBody);
+            }
+
+            return false;
+        }, false);
+
 
         function getMousePosition(canvas, event) {
             let rect = canvas.getBoundingClientRect();
@@ -118,12 +190,8 @@
         mouse: canvasmouse,
         constraint:{
             render: {
-            visible: false
+            visible: true
         }
-        },
-        collisionFilter: {
-            category: 0x0001,
-            mask: 0x0000, // Nothing will collide with this
         }
         
     };
@@ -291,45 +359,6 @@
     Composite.add(engine.world, playerParticles)
     }
 
-    canvas.addEventListener("mousedown", function (e) {
-        getCorrectedMousePosition(e)
-        console.log(mouseX, mouseY)
-        if(mode == "place"){
-        //var correctedMouse = getCorrectedMousePosition(e);
-        //mouseX = correctedMouse.x;
-        //mouseY = correctedMouse.y;
-       
-        
-        var placementObj = null;
-        if(type == "tile"){
-            placementObj = Bodies.rectangle(mouseX, mouseY, 80, 80, {isStatic: true, collisionFilter:{category:TILE_CATEGORY}});
-        }else{
-            placementObj = Composites.softBody(mouseX, mouseY, 7, 7, 0, 0, true, 10, particleOptions, constraintOptions);
-        }
-        Composite.add(engine.world, placementObj); 
-        }
-    }); 
-
-    function switchPlacementMode(){
-        if(mode == "place"){
-            mode="drag"
-            document.getElementById("switchModeButton").innerHTML = "Currently: <br> Drag Mode"
-        }else{
-            mode="place"
-            document.getElementById("switchModeButton").innerHTML  = "Currently: <br> Place Mode"
-        }
-    }
-
-
-    function switchTypeMode(){
-        if(type == "tile"){
-            type="soft"
-            document.getElementById("switchTypeButton").innerHTML = "Currently: <br> Soft Body"
-        }else{
-            type="tile"
-            document.getElementById("switchTypeButton").innerHTML  = "Currently: <br> Tile"
-        }
-    }
     let cameraOffset={x:0, y:0}
 
     let dampening = 0.2;
@@ -378,38 +407,6 @@
 
     updateEyes()
     });
-/*
-    function smoothZoomIn(world, scale, duration) {
-    const startTime = Date.now();
-
-    function updateZoom() {
-        const currentTime = Date.now();
-        const elapsedTime = currentTime - startTime;
-        const progress = Math.min(elapsedTime / duration, 1);
-
-        world.bodies.forEach(body => {
-            if (body.circleRadius) {
-                const originalRadius = body.render.originalRadius || body.circleRadius;
-                body.circleRadius = originalRadius * (1 + (scale - 1) * progress);
-            } else if (body.vertices) {
-                const originalVertices = body.render.originalVertices || body.vertices.map(vertex => ({ x: vertex.x, y: vertex.y }));
-                body.vertices.forEach((vertex, index) => {
-                    vertex.x = originalVertices[index].x * (1 + (scale - 1) * progress);
-                    vertex.y = originalVertices[index].y * (1 + (scale - 1) * progress);
-                });
-            }
-        });
-
-        if (progress < 1) {
-            requestAnimationFrame(updateZoom);
-        }
-    }
-
-    updateZoom();
-    }
-*/
-
-
     //sets soft body position 
     function setSoftBodyPosition(softBody, newX, newY) {
     // Calculate the centroid (center of mass)
@@ -443,9 +440,9 @@
 
     function getCorrectedMousePosition(event) {
 
-    var rect = canvas.getBoundingClientRect(); // Assumes canvas is your canvas element
-    var scaleX = canvas.width / rect.width;    // Relationship bitmap vs. element for X
-    var scaleY = canvas.height / rect.height;  // Relationship bitmap vs. element for Y
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = canvas.width / rect.width;   
+    var scaleY = canvas.height / rect.height;
 
     // Calculate the mouse position corrected by the camera offset and canvas scaling
       mouseX = (event.clientX - rect.left) * scaleX + cameraOffset.x;
@@ -503,7 +500,17 @@
     // Check if the lowest vertex of bodyA is within the threshold distance to the top boundary of bodyB
     return lowestY >= topBoundary - threshold;
 }
-    
+    let playerDead = false;
+    let respawn = true;
+    function killPlayer(){
+        if(!playerDead){
+            playerDead = true;
+        }
+        if(respawn){
+            pRespawn()
+        }
+    }    
+
     // add all of the bodies to the world
     Composite.add(engine.world, [canvasmouse, mConstraint]);
     

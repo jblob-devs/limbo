@@ -1,13 +1,13 @@
 function createLobby(){
     setPlayerPosition(410,500)
-    pRespawn(410, 500)
+    setRespawn(410, 500)
     createTile(400, 610, 200, 60)
 }
 
 
 function runLevel0(){
     setPlayerPosition(350,550)
-    pRespawn(410, 600)
+    setRespawn(410, 600)
 
     createTile(400, 610, 200, 60)
     createTile(180, 530, 100, 60)
@@ -21,7 +21,7 @@ function runLevel0(){
 ///all levels are temp stored here until better thing can be found ;/
 function runLevel1(){
     setPlayerPosition(410,600)
-    pRespawn(410, 500)
+    setRespawn(410, 500)
 
     createTile(400, 610, 200, 60)
     createTile(600, 610, 50, 60)
@@ -33,3 +33,4 @@ function runLevel1(){
 
     createEndpoint(1210, 370)
 }
+
