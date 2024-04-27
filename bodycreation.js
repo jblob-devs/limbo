@@ -127,9 +127,7 @@ Events.on(engine, 'collisionEnd', event => {
   });
 Composite.add(engine.world, [sign, exclam1, exclam2])
 }
-
-
-var mode = "none"
+var mode = 'none'
 var type = "tile"
 let editon = false;
 
@@ -191,15 +189,9 @@ function leveleditplacetile(x, y, h ,w){
     createKillTile(x,y,h,w)
   }
 }
-
-function switchPlacementMode(){
-  if(mode == "place"){
-      mode="drag"
-      document.getElementById("switchModeButton").innerHTML = "Currently: <br> Drag Mode"
-  }else{
-      mode="place"
-      document.getElementById("switchModeButton").innerHTML  = "Currently: <br> Place Mode"
-  }
+let levelEditRespawnPoint = {x:0, y:0}
+function setleveleditrespawn(){
+  type = "respawntile"
 }
 
 

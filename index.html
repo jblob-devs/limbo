@@ -44,11 +44,11 @@
         
        <!--level editor panel-->
         <div id="SwitchMode" style="top:15vh;width:80vw">
-            <button id="switchModeButton" onclick="switchPlacementMode()">Currently:<br> Place Mode</button>
             <button id="switchTypeButton" onclick="switchTypeMode()">Currently: <br> Tile</button>
+            <button onclick="setleveleditrespawn()">Set Respawn area</button>
             <button onclick="Swal.fire({
                 title:'How to use the editor:',
-                html: 'Left-Click: place tile <br><br> Right-Click: change tile dimensions <br> <br> Click the Download button to download a copy of your level layout',
+                html: 'Left-Click: place tile; hold and drag to scale the tile <br> <br> Click the Download button to download a copy of your level layout',
                 toast: true,
                 position: 'top-end',
                 showConfirmButton: true,
@@ -121,10 +121,13 @@
         mouse: canvasmouse,
         constraint:{
             render: {
-            visible: true
+            visible: false,
+            collisionFilter:{
+            mask:0x000
         }
         }
-        
+       
+    }
     };
 
    
@@ -177,34 +180,60 @@
 
         let isDragging = false;
         let boxoutline;
+        let startX, startY;
+        let ogsize = null
+        let scaleFactor = null
         //level editor code
         canvas.addEventListener("mousedown", function (e) {
             if(event.button == 0){
-                isDragging = true;
-                getCorrectedMousePosition(e) 
-                console.log(mouseX, mouseY)
                 if(mode == "place"){
+                    if(type == "respawntile"){
+                        levelEditRespawnPoint.x = mouseX
+                        levelEditRespawnPoint.y = mouseY
+                    }else{
+                    isDragging = true;
+                    getCorrectedMousePosition(e) 
+                    startX = mouseX;
+                    startY = mouseY;
+                    console.log(mouseX, mouseY)
                     //leveleditplacetile(mouseX,mouseY, 30 ,30)
-                    boxoutline = Bodies.rectangle(mouseX, mouseY, 1, 1, { isStatic: true });
+                    boxoutline = Bodies.rectangle(mouseX, mouseY, 30, 30, staticBodyOptions);
+                     ogsize = {width: 30, height: 30}
+                     scaleFactor = {x:1,y:1}
+                    Composite.add(engine.world, boxoutline)
+                    console.log(boxoutline.bounds.max.x-boxoutline.bounds.min.x)
+                    }
                 }
             }
        
         }); 
         canvas.addEventListener("mousemove", function (e) {
-            if (isDragging) {
+            if (isDragging && boxoutline) {
                 getCorrectedMousePosition(e) 
-
                 // Update the size and position of the outline
-                const width = mouseX - startX;
-                const height = mouseY - startY;
-                Body.scale(boxoutline, width / boxoutline.bounds.width, height / boxoutline.bounds.height);
+                const width = Math.max(1, Math.abs(mouseX - startX))  
+                const height = Math.max(1, Math.abs(mouseY - startY)) 
+                console.log(width,height)
+                //let outw = boxoutline.bounds.max.x-boxoutline.bounds.min.x;
+                //let outh = boxoutline.bounds.max.y-boxoutline.bounds.min.y;
+                let scaleX = width / ogsize.width
+                let scaleY = height / ogsize.height
                 Body.setPosition(boxoutline, { x: startX + width / 2, y: startY + height / 2 });
+                Body.scale(boxoutline, scaleX/scaleFactor.x, scaleY/scaleFactor.y);
+                scaleFactor.x=scaleX
+                scaleFactor.y =scaleY
             }
         }); 
+
+
+
         canvas.addEventListener("mouseup", function (e) {
-        if (isDragging) {
+        if (isDragging && boxoutline) {
+            console.log("up")
+                let outw = boxoutline.bounds.max.x-boxoutline.bounds.min.x;
+                let outh = boxoutline.bounds.max.y-boxoutline.bounds.min.y;
                 // Convert the outline into a box
-                createTile(boxoutline.position.x,boxoutline.position.y,  boxoutline.bounds.width, boxoutline.bounds.height)
+                leveleditplacetile(boxoutline.position.x,boxoutline.position.y,  outw, outh)
                 // Remove the outline
                 Composite.remove(engine.world, boxoutline);
                 outline = null;
