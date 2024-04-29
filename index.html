@@ -46,6 +46,8 @@
         <div id="SwitchMode" style="top:15vh;width:80vw">
             <button id="switchTypeButton" onclick="switchTypeMode()">Currently: <br> Tile</button>
             <button onclick="setleveleditrespawn()">Set Respawn area</button>
+            <input type = "file" id = "fileForUpload" class="customFileUploadCSS" onchange="submitImportLevel(event)">
+            
             <button onclick="Swal.fire({
                 title:'How to use the editor:',
                 html: 'Left-Click: place tile; hold and drag to scale the tile <br> <br> Click the Download button to download a copy of your level layout',
@@ -195,13 +197,13 @@
                     getCorrectedMousePosition(e) 
                     startX = mouseX;
                     startY = mouseY;
-                    console.log(mouseX, mouseY)
+                    //console.log(mouseX, mouseY)
                     //leveleditplacetile(mouseX,mouseY, 30 ,30)
                     boxoutline = Bodies.rectangle(mouseX, mouseY, 30, 30, staticBodyOptions);
                      ogsize = {width: 30, height: 30}
                      scaleFactor = {x:1,y:1}
                     Composite.add(engine.world, boxoutline)
-                    console.log(boxoutline.bounds.max.x-boxoutline.bounds.min.x)
+                    //console.log(boxoutline.bounds.max.x-boxoutline.bounds.min.x)
                     }
                 }
             }
@@ -213,7 +215,6 @@
                 // Update the size and position of the outline
                 const width = Math.max(1, Math.abs(mouseX - startX))  
                 const height = Math.max(1, Math.abs(mouseY - startY)) 
-                console.log(width,height)
                 //let outw = boxoutline.bounds.max.x-boxoutline.bounds.min.x;
                 //let outh = boxoutline.bounds.max.y-boxoutline.bounds.min.y;
                 let scaleX = width / ogsize.width
@@ -229,7 +230,6 @@
 
         canvas.addEventListener("mouseup", function (e) {
         if (isDragging && boxoutline) {
-            console.log("up")
                 let outw = boxoutline.bounds.max.x-boxoutline.bounds.min.x;
                 let outh = boxoutline.bounds.max.y-boxoutline.bounds.min.y;
                 // Convert the outline into a box
@@ -242,6 +242,11 @@
             }
         }); 
         
+        async function submitImportLevel(event){
+            var file = document.getElementById("fileForUpload").files[0];
+            let text = await file.text();
+            console.log(text)
+        }
 
         function downloadLevelLayout(){
             let array =[];

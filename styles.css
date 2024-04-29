@@ -40,6 +40,24 @@
     display: absolute;
 }.swal2-popup {
     font-family: "Comfortaa", sans-serif;
+  }input{
+    background-color: transparent;
+    background-repeat: no-repeat;
+    border: none;
+    cursor: pointer;
+    border: 2px solid white;
+    border-radius: 5px;
+    color: #eee;
+    font-family: "Comfortaa", sans-serif;
+  }.customFileUploadCSS{
+    background-color: transparent;
+    background-repeat: no-repeat;
+    border: none;
+    cursor: pointer;
+    border: 2px solid white;
+    border-radius: 5px;
+    color: #eee;
+    font-family: "Comfortaa", sans-serif;
   }
     
 
