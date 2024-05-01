@@ -118,6 +118,8 @@ function createLevel(number, player, engine, render){
 
   }else if(number == 'lobby'){
     createLobby()
+  }else if(number == 'blank'){
+
   }else{
       createLobby()
   }

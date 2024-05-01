@@ -189,6 +189,7 @@
         canvas.addEventListener("mousedown", function (e) {
             if(event.button == 0){
                 if(mode == "place"){
+                    getCorrectedMousePosition(e)
                     if(type == "respawntile"){
                         levelEditRespawnPoint.x = mouseX
                         levelEditRespawnPoint.y = mouseY
@@ -246,11 +247,26 @@
             var file = document.getElementById("fileForUpload").files[0];
             let text = await file.text();
             console.log(text)
+            createLevel('blank', playerBlob, engine, render)
+            //Composite.remove(engine.world, playerBlob)
+            let arr = text.split(',')
+            for(let i =0; i < arr.length; i++){
+                setRespawn(arr[0],arr[1])
+                if(arr[i] == 'tile' || arr[i] == 'killtile'){
+                    let x = Number(arr[i+1])
+                    let y = Number(arr[i+2])
+                    let width = Number(arr[i+3])
+                    let height = Number(arr[i+4])
+                    createTile(x,y,width,height)
+                }
+            }
         }
 
         function downloadLevelLayout(){
             let array =[];
             let bodies = Composite.allBodies(engine.world)
+            array.push(levelEditRespawnPoint.x)
+            array.push(levelEditRespawnPoint.y)
             bodies.forEach(function(body){
                 if(body.customData.type == 'tile' || body.customData.type == 'killtile'){
                     let len  =  body.bounds.max.x - body.bounds.min.x
