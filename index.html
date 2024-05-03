@@ -60,7 +60,8 @@
                 color: 'white'
               })">How to use</button>
               <button id="downloadButton" onclick="downloadLevelLayout()">Download Level Layout</button>
-        </div>
+              <button id="freemovebutton" onclick="freemovetoggle()"> Free move: Disabled</button>
+            </div>
         </div>
 
     </body>
@@ -69,9 +70,10 @@
 
         var mouseX = 0;
         var mouseY = 0
+        let freemove= false
         var canvas = document.getElementById("CANVAS");
         
-
+        
     // module aliases
     var Engine = Matter.Engine,
         Render = Matter.Render,
@@ -186,13 +188,24 @@
         let ogsize = null
         let scaleFactor = null
         //level editor code
+        function freemovetoggle(){
+            if(!freemove){
+                freemove = true;
+                $("#freemovebutton").html("Free Move Enabled")
+            }else{
+                freemove = false;
+                $("#freemovebutton").html("Free Move Disabled")
+            }
+        }
+
         canvas.addEventListener("mousedown", function (e) {
-            if(event.button == 0){
+            if(e.button == 0){
                 if(mode == "place"){
                     getCorrectedMousePosition(e)
                     if(type == "respawntile"){
                         levelEditRespawnPoint.x = mouseX
                         levelEditRespawnPoint.y = mouseY
+                        type = 'tile'
                     }else{
                     isDragging = true;
                     getCorrectedMousePosition(e) 
@@ -207,11 +220,33 @@
                     //console.log(boxoutline.bounds.max.x-boxoutline.bounds.min.x)
                     }
                 }
+            }else if(e.button == 2){
+                //if(mode == 'place'){
+                    getCorrectedMousePosition(e)
+                    let pos = {x: mouseX, y: mouseY}
+                    let bodyClicked = Query.point(engine.world.bodies, pos)
+                        console.log(bodyClicked)
+                    if(bodyClicked.length > 0){
+                        Composite.remove(engine.world, bodyClicked[0])
+                    }else{
+                        if(bodyExists(playerBlob)){
+                            Body.setPosition(playerBlob, pos)
+                        }else{
+                            Composite.add(engine.world, playerBlob)
+                            Body.setPosition(playerBlob, pos)
+                        }
+                        
+                    }
+                //}
             }
-       
         }); 
+
+        document.addEventListener('contextmenu', function(event) {
+            event.preventDefault();
+        });
         canvas.addEventListener("mousemove", function (e) {
-            if (isDragging && boxoutline) {
+            if (isDragging && boxoutline && !freemove) {
+                cameracenter = 'playerBlob'
                 getCorrectedMousePosition(e) 
                 // Update the size and position of the outline
                 const width = Math.max(1, Math.abs(mouseX - startX))  
@@ -224,6 +259,23 @@
                 Body.scale(boxoutline, scaleX/scaleFactor.x, scaleY/scaleFactor.y);
                 scaleFactor.x=scaleX
                 scaleFactor.y =scaleY
+            }
+            else if(freemove){
+                /*let dx = event.clientX - mouseX;
+                let dy = event.clientY - mouseX;
+
+                // Update the position of the render canvas based on the mouse movement
+                render.bounds.min.x += dx;
+                render.bounds.max.x += dx;
+                render.bounds.min.y += dy;
+                render.bounds.max.y += dy;
+
+                // Update the mouse position for the next movement
+                mouseX = event.clientX;
+                mouseY = event.clientY;
+                */
+                //updateCameraPosition(event)
+                cameracenter = 'mouse'
             }
         }); 
 
@@ -296,19 +348,6 @@
                 }, 0); 
             }
         }
-
-        canvas.addEventListener('contextmenu', function(event) {
-            getCorrectedMousePosition(event)
-            event.preventDefault(); // Prevent the default context menu
-            var bodies = Composite.allBodies(engine.world);
-            var clickedBody = Query.point(bodies, { x: mouseX, y: mouseY })[0];
-            console.log(Query.point(bodies, { x: mouseX, y: mouseY }))
-            if (clickedBody) {
-                changeBodySize(clickedBody);
-            }
-
-            return false;
-        }, false);
 
 //label creation
     let label = document.createElement('div');
@@ -425,24 +464,47 @@
     }
 
     let cameraOffset={x:0, y:0}
+    function updateCameraPosition(event) {
+    // Calculate the difference between the mouse position and half of window dimensions
+    let dx = event.clientX - window.innerWidth / 2;
+    let dy = event.clientY - window.innerHeight / 2;
+
+    // Shift the render bounds based on the difference
+    Bounds.shift(render.bounds, { x: dx, y: dy });
+    }
+
+    // Event listener for mouse movement
+    
 
     let dampening = 0.2;
+    let cameracenter = 'playerBlob'
+    let cameracenterx = playerBlob.position.x
+    let cameracentery = playerBlob.position.y
     Events.on(engine, 'beforeUpdate', function(e) {
+        if(cameracenter == 'playerBlob'){
+            cameracenterx = playerBlob.position.x
+            cameracentery = playerBlob.position.y
+        }else if(cameracenter == "mouse"){
+            cameracenterx = mouseX;
+            cameracentery = mouseY
+        }
+        
         getCorrectedMousePosition(e)
         canvasmouse.position.x = mouseX
         canvasmouse.position.y = mouseY
         var canvas = document.getElementById('CANVAS');
-        cameraOffset.x = ((playerBlob.position.x)*devicePixelRatio - (window.innerWidth / 2));
-        cameraOffset.y = ((playerBlob.position.y)*devicePixelRatio - (window.innerHeight / 2));
-        
+        cameraOffset.x = ((cameracenterx)*devicePixelRatio - (window.innerWidth / 2));
+        cameraOffset.y = ((cameracentery)*devicePixelRatio - (window.innerHeight / 2));
         // center view at player 
         Bounds.shift(render.bounds,
         {
             
-            x: playerBlob.position.x - window.innerWidth/2 ,
-            y: playerBlob.position.y - window.innerHeight/2 
+            x: cameracenterx - window.innerWidth/2 ,
+            y: cameracentery - window.innerHeight/2 
             
         });
+        
+        
 
 
         canvasmouse.position.x = mouseX

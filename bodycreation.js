@@ -204,3 +204,14 @@ function switchTypeMode(){
       document.getElementById("switchTypeButton").innerHTML  = "Currently: <br> Tile"
   }
 }
+
+// checks if a body of the type/is passed already exists in the world
+function bodyExists(body){
+  for(let i =0; i<engine.world.bodies.length; i++){
+    let curbod = engine.world.bodies[i]
+    if(curbod === body){
+      return true;
+    }
+  }
+  return false;
+}
