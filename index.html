@@ -50,7 +50,7 @@
             
             <button onclick="Swal.fire({
                 title:'How to use the editor:',
-                html: 'Left-Click: place tile; hold and drag to scale the tile <br> <br> Click the Download button to download a copy of your level layout',
+                html: 'Left-Click: place tile; hold and drag to scale the tile <br> <br> Right-click: place a test player, or if a test player exists, move its position <br><br> Free move: can be toggled using F. In freemove, right click to move the camera <br><br> Click the Download button to download a copy of your level layout <br> <br> You can also import a level using the choose file.',
                 toast: true,
                 position: 'top-end',
                 showConfirmButton: true,
@@ -70,6 +70,8 @@
 
         var mouseX = 0;
         var mouseY = 0
+        let logposx = 0;
+        let logposy  = 0;
         let freemove= false
         var canvas = document.getElementById("CANVAS");
         
@@ -179,6 +181,40 @@
                 createLevel(curLevel, playerBlob, engine, render)
                 label.style.display = 'none'
             }
+        }else if(event.key == 'f'){
+            if(editon){
+            if(!freemove){
+                freemove = true;
+                Swal.fire({
+                html: 'Free move toggled on',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: true,
+                confirmButtonText: 'Ok',
+                font: 'Comfortaa, sans-serif',
+                background: '#14151f',
+                time: 2000,
+                color: 'white'
+              })
+                $("#freemovebutton").html("Free Move Enabled")
+            }else{
+                
+                freemove = true;
+                Swal.fire({
+                html: 'Free move toggled off',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: true,
+                confirmButtonText: 'Ok',
+                font: 'Comfortaa, sans-serif',
+                background: '#14151f',
+                timer: 2000,
+                color: 'white'
+              })
+                freemove = false;
+                $("#freemovebutton").html("Free Move Disabled")
+            }
+        }
         }
     });
 
@@ -200,7 +236,7 @@
 
         canvas.addEventListener("mousedown", function (e) {
             if(e.button == 0){
-                if(mode == "place"){
+                if(mode == "place" && editon){
                     getCorrectedMousePosition(e)
                     if(type == "respawntile"){
                         levelEditRespawnPoint.x = mouseX
@@ -220,8 +256,8 @@
                     //console.log(boxoutline.bounds.max.x-boxoutline.bounds.min.x)
                     }
                 }
-            }else if(e.button == 2){
-                //if(mode == 'place'){
+            }else if(e.button == 2 && editon){
+                if(!freemove){
                     getCorrectedMousePosition(e)
                     let pos = {x: mouseX, y: mouseY}
                     let bodyClicked = Query.point(engine.world.bodies, pos)
@@ -230,6 +266,7 @@
                         Composite.remove(engine.world, bodyClicked[0])
                     }else{
                         if(bodyExists(playerBlob)){
+                            console.log("exists")
                             Body.setPosition(playerBlob, pos)
                         }else{
                             Composite.add(engine.world, playerBlob)
@@ -237,7 +274,11 @@
                         }
                         
                     }
-                //}
+                }else{
+                    getCorrectedMousePosition(e)
+                    logposx = mouseX
+                    logposy = mouseY
+                }
             }
         }); 
 
@@ -245,8 +286,9 @@
             event.preventDefault();
         });
         canvas.addEventListener("mousemove", function (e) {
-            if (isDragging && boxoutline && !freemove) {
-                cameracenter = 'playerBlob'
+            if (isDragging && boxoutline) {
+                console.log("e")
+                //cameracenter = 'playerBlob'
                 getCorrectedMousePosition(e) 
                 // Update the size and position of the outline
                 const width = Math.max(1, Math.abs(mouseX - startX))  
@@ -259,23 +301,6 @@
                 Body.scale(boxoutline, scaleX/scaleFactor.x, scaleY/scaleFactor.y);
                 scaleFactor.x=scaleX
                 scaleFactor.y =scaleY
-            }
-            else if(freemove){
-                /*let dx = event.clientX - mouseX;
-                let dy = event.clientY - mouseX;
-
-                // Update the position of the render canvas based on the mouse movement
-                render.bounds.min.x += dx;
-                render.bounds.max.x += dx;
-                render.bounds.min.y += dy;
-                render.bounds.max.y += dy;
-
-                // Update the mouse position for the next movement
-                mouseX = event.clientX;
-                mouseY = event.clientY;
-                */
-                //updateCameraPosition(event)
-                cameracenter = 'mouse'
             }
         }); 
 
@@ -298,6 +323,7 @@
         async function submitImportLevel(event){
             var file = document.getElementById("fileForUpload").files[0];
             let text = await file.text();
+            let str = ""
             console.log(text)
             createLevel('blank', playerBlob, engine, render)
             //Composite.remove(engine.world, playerBlob)
@@ -309,7 +335,14 @@
                     let y = Number(arr[i+2])
                     let width = Number(arr[i+3])
                     let height = Number(arr[i+4])
-                    createTile(x,y,width,height)
+                    if(arr[i] == 'tile'){
+                        createTile(x,y,width,height)
+                        str += `createTile(${x},${y},${width},${height})`
+                    }else{
+                        createKillTile(x,y,width,height)
+                        str += `createTile(${x},${y},${width},${height})`
+                    }
+                    
                 }
             }
         }
@@ -481,14 +514,14 @@
     let cameracenterx = playerBlob.position.x
     let cameracentery = playerBlob.position.y
     Events.on(engine, 'beforeUpdate', function(e) {
-        if(cameracenter == 'playerBlob'){
+        if(bodyExists(playerBlob)){
             cameracenterx = playerBlob.position.x
             cameracentery = playerBlob.position.y
-        }else if(cameracenter == "mouse"){
-            cameracenterx = mouseX;
-            cameracentery = mouseY
+        }else if(freemove){
+            cameracenterx = logposx
+            cameracentery = logposy   
         }
-        
+
         getCorrectedMousePosition(e)
         canvasmouse.position.x = mouseX
         canvasmouse.position.y = mouseY
