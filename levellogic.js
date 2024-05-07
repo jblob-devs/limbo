@@ -12,16 +12,17 @@ function setRespawn(x,y){
   playerRespawn.x = x
   playerRespawn.y = y
 }
+
 function pRespawn(){
 
   Body.setPosition(playerBlob, {x:playerRespawn.x, y:playerRespawn.y})
   Body.setVelocity(playerBlob, {x:0, y:0})
   playerDead = false;
 }
-
+let playerdeathyvalue = 800;
 function checkDeaths(){
   Events.on(engine, 'beforeUpdate', function(e) {
-    if(playerBlob.position.y > 800){
+    if(playerBlob.position.y > playerdeathyvalue){
       killPlayer()
     }
 

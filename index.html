@@ -61,6 +61,7 @@
               })">How to use</button>
               <button id="downloadButton" onclick="downloadLevelLayout()">Download Level Layout</button>
               <button id="freemovebutton" onclick="freemovetoggle()"> Free move: Disabled</button>
+              <button id="deathBarrierSetLevelEdit" onclick="setDeathBarrierNotif()"> Set Death Barrier</button>
             </div>
         </div>
 
@@ -233,6 +234,38 @@
                 $("#freemovebutton").html("Free Move Disabled")
             }
         }
+        function setDeathBarrierNotif(){
+            Swal.fire({
+                html: 'Free move toggled off',
+                position: 'top-end',
+                showConfirmButton: true,
+                confirmButtonText: 'Ok',
+                font: 'Comfortaa, sans-serif',
+                background: '#14151f',
+                color: 'white',
+                input:'number',
+                inputPlaceholder: 'Enter a death barrier y-value (default is 800)',
+                inputValidator: (value)=>{
+                    if(!value){
+                        Swal.fire({
+                            html: 'Enter a value',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: true,
+                            confirmButtonText: 'Ok',
+                            font: 'Comfortaa, sans-serif',
+                            background: '#14151f',
+                            timer: 2000,
+                            color: 'white'
+                          })
+                    }
+                }
+              }).then((result) => {
+                if(result.isConfirmed){
+                    playerdeathyvalue = result.value
+                }
+              })
+        }
 
         canvas.addEventListener("mousedown", function (e) {
             if(e.button == 0){
@@ -241,6 +274,8 @@
                     if(type == "respawntile"){
                         levelEditRespawnPoint.x = mouseX
                         levelEditRespawnPoint.y = mouseY
+                        let pointrespawn = Bodies.rectangle(mouseX,mouseY, 15, 15, {isStatic:true, isStatic: true, isSensor:true, render:{strokeStyle:'limegreen'}, customData:{type:'checkpoint'}, angle: Math.PI/4 })
+                        Composite.add(engine.world, pointrespawn)
                         type = 'tile'
                     }else{
                     isDragging = true;
