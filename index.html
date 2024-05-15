@@ -4,10 +4,12 @@
         <link rel="stylesheet" href="styles.css">
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>  
        <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
-       <script src="matter.js"></script>
+       <script src="library/matterjs/matter.js"></script>
        <script src="bodycreation.js"></script>
        <script src="levellogic.js"></script>
        <script src="levels/level0.js"></script>
+
+       <script src="library/particlejs/particleoptions.js"></script>
        
        <!--jquery script-->
        <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,12 +21,20 @@
     
     
     <body>
+
+        <!--Load TsParticles-->
+        <script src="library/particlejs/tsparticles.all.bundle.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@tsparticles/preset-stars@3/tsparticles.preset.stars.bundle.min.js"></script>
+
+        <style>
+        </style> 
         <div id="title" style="height:100%;width:100%;background-color:#14151f;">
             <div style="position:absolute;top:20vh;left:40vw;"><span>L</span><span>i</span><span>m</span><span>b</span><span>o</span></div>
             <br>
             <button style="padding:5vh 8vw; font-size:4vh;height:5vh;top:35vh;left:35vw" class ="display" id="startButton" onclick="start('level0')">Start</button>
             <button style="padding:5vh 8vw; font-size:4vh;height:5vh;top:47vh;left:35vw" class ="display" id="lobbyButton" onclick="start('lobby')">Lobby</button>
             <button style="padding:5vh 8vw; font-size:4vh;height:5vh;top:60vh;left:35vw" class ="display" id="levelEditorButton" onclick="start('levelEdit')">Level Editor</button>
+        
         </div>
 
 

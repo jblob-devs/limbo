@@ -1,7 +1,6 @@
 #textbox,#title,#SwitchMode, .display, #textBox, #label{
     position: absolute;
     color: #eee;
-    cursor: move;
     font-family: "Comfortaa", sans-serif;
     user-select: none;
     display: flex;
