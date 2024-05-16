@@ -1,5 +1,6 @@
 
 var endpoint;
+var pointrespawn;
 var endpointdeco1;
 var endpointdeco2;
 const TILE_CATEGORY = 0x0002;

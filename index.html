@@ -9,7 +9,7 @@
        <script src="levellogic.js"></script>
        <script src="levels/level0.js"></script>
 
-       <script src="library/particlejs/particleoptions.js"></script>
+      
        
        <!--jquery script-->
        <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,9 +23,7 @@
     <body>
 
         <!--Load TsParticles-->
-        <script src="library/particlejs/tsparticles.all.bundle.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@tsparticles/preset-stars@3/tsparticles.preset.stars.bundle.min.js"></script>
-
+        
         <style>
         </style> 
         <div id="title" style="height:100%;width:100%;background-color:#14151f;">
@@ -39,6 +37,7 @@
 
 
         <div id="playscreen">
+            <div id="tsparticles" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></div>
             <canvas id="CANVAS"></canvas>
             <div id="textBox" style="top:15vh;left:25vw"></div>
           
@@ -74,6 +73,10 @@
               <button id="deathBarrierSetLevelEdit" onclick="setDeathBarrierNotif()"> Set Death Barrier</button>
             </div>
         </div>
+        <script src="library/particlejs/particleoptions.js"></script>
+        <script src="library/particlejs/tsparticles.all.bundle.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@tsparticles/preset-stars@3/tsparticles.preset.stars.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@tsparticles/preset-links@3/tsparticles.preset.links.min.js"></script>
 
     </body>
     <script>
@@ -186,11 +189,13 @@
                
             //Body.applyForce(playerBlob, {x: playerBlob.position.x, y: playerBlob.position.y}, {x: -force * 0.1, y: 0});
         }else if(event.key == 's' || event.key == 'ArrowDown'){
-            let collisions = Query.collides(playerBlob, [endpoint])
+            if(bodyExists(endpoint)){
+                let collisions = Query.collides(playerBlob, [endpoint])
             if(collisions.length > 0){
                 curLevel++
                 createLevel(curLevel, playerBlob, engine, render)
                 label.style.display = 'none'
+            }
             }
         }else if(event.key == 'f'){
             if(editon){
@@ -276,7 +281,6 @@
                 }
               })
         }
-
         canvas.addEventListener("mousedown", function (e) {
             if(e.button == 0){
                 if(mode == "place" && editon){
@@ -284,7 +288,7 @@
                     if(type == "respawntile"){
                         levelEditRespawnPoint.x = mouseX
                         levelEditRespawnPoint.y = mouseY
-                        let pointrespawn = Bodies.rectangle(mouseX,mouseY, 15, 15, {isStatic:true, isStatic: true, isSensor:true, render:{strokeStyle:'limegreen'}, customData:{type:'checkpoint'}, angle: Math.PI/4 })
+                        pointrespawn = Bodies.rectangle(mouseX,mouseY, 15, 15, {isStatic:true, isStatic: true, isSensor:true, render:{strokeStyle:'limegreen'}, customData:{type:'checkpoint'}, angle: Math.PI/4 })
                         Composite.add(engine.world, pointrespawn)
                         type = 'tile'
                     }else{
@@ -332,7 +336,6 @@
         });
         canvas.addEventListener("mousemove", function (e) {
             if (isDragging && boxoutline) {
-                console.log("e")
                 //cameracenter = 'playerBlob'
                 getCorrectedMousePosition(e) 
                 // Update the size and position of the outline
@@ -390,6 +393,7 @@
                     
                 }
             }
+            console.log(str)
         }
 
         function downloadLevelLayout(){
@@ -533,11 +537,6 @@
         var endingConstraint = Constraint.create(endConstraint);
         Composite.add(engine.world, endingConstraint)
 
-    
-    
-    
-    
-    
     Composite.add(engine.world, playerParticles)
     }
 
@@ -558,6 +557,7 @@
     let cameracenter = 'playerBlob'
     let cameracenterx = playerBlob.position.x
     let cameracentery = playerBlob.position.y
+    
     Events.on(engine, 'beforeUpdate', function(e) {
         if(bodyExists(playerBlob)){
             cameracenterx = playerBlob.position.x
@@ -610,7 +610,24 @@
         isOnGround = false;
     }
 
-    updateEyes()
+    //updateEyes()
+
+    if(bodyExists(pointrespawn)){
+        let respawncollisions = Query.collides(playerBlob, [pointrespawn])
+        if(respawncollisions.length > 0){
+            pointrespawn.forEach(c =>{
+                Body.setAngle(c, 45);
+                Body.setAngularVelocity(c, 0);
+                c.render.fillStyle = 'none'
+            })
+
+            pointrespawn.render.fillStyle = 'green'
+            Body.setAngularVelocity(pointrespawn , 0.1)
+            setRespawn(pointrespawn.position.x,pointrespawn.position.y)
+        
+        }
+    }
+
     });
     //sets soft body position 
     function setSoftBodyPosition(softBody, newX, newY) {

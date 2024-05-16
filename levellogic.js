@@ -5,7 +5,6 @@ let string;
 var keypressed = false;
 var delayInMilliseconds = 1000;
 let playerRespawn = {x: 0, y:0}
-
 const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
 
 function setRespawn(x,y){
@@ -111,12 +110,12 @@ function start(where){
 let curLevel = 0;
 
 function createLevel(number, player, engine, render){
-    Composite.clear(engine.world);
-    Render.stop(render);
-    let levelName = `runLevel${number}`
+  Composite.clear(engine.world);
+  Render.stop(render);
+  clearParticles()
+  let levelName = `runLevel${number}`
   if(typeof window[levelName] === 'function'){
     window[levelName]();
-
   }else if(number == 'lobby'){
     createLobby()
   }else if(number == 'blank'){
@@ -127,7 +126,7 @@ function createLevel(number, player, engine, render){
   Composite.add(engine.world, player)
   Render.run(render);
   checkDeaths()
-      // run the engine
+  // run the engine
   //Runner.run(runner, engine);
 
   }
