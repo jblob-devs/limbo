@@ -90,6 +90,7 @@ function start(where){
     $("#startButton").hide();
     $("#title").hide();
     $("#playscreen").show()
+    $("#tsparticles").hide()
     //tutorialDialogue();
     if(where == 'lobby'){
       createLevel('lobby', playerBlob, engine, render)

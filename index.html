@@ -281,17 +281,23 @@
                 }
               })
         }
+
+        function switchModeToSign(){
+            type = "sign";
+        }
         canvas.addEventListener("mousedown", function (e) {
             if(e.button == 0){
                 if(mode == "place" && editon){
-                    getCorrectedMousePosition(e)
                     if(type == "respawntile"){
                         levelEditRespawnPoint.x = mouseX
                         levelEditRespawnPoint.y = mouseY
                         pointrespawn = Bodies.rectangle(mouseX,mouseY, 15, 15, {isStatic:true, isStatic: true, isSensor:true, render:{strokeStyle:'limegreen'}, customData:{type:'checkpoint'}, angle: Math.PI/4 })
                         Composite.add(engine.world, pointrespawn)
                         type = 'tile'
-                    }else{
+                    }else if(type == "sign"){
+                        createSign(mouseX, mouseY, )
+                    }
+                    else{
                     isDragging = true;
                     getCorrectedMousePosition(e) 
                     startX = mouseX;

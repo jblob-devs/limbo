@@ -154,7 +154,7 @@ setInterval(function(){
   */
   }else{
     $("#SwitchMode").hide();
-    Composite.remove(engine.world,[canvasmouse, mConstraint] )
+    //Composite.remove(engine.world,[canvasmouse, mConstraint] )
   }
 }, 100)
 
@@ -201,8 +201,11 @@ function switchTypeMode(){
       type="killtile"
       document.getElementById("switchTypeButton").innerHTML = "Currently: <br> Kill Tile"
   }else if(type == 'killtile'){
-      type="tile"
-      document.getElementById("switchTypeButton").innerHTML  = "Currently: <br> Tile"
+      type="sign"
+      document.getElementById("switchTypeButton").innerHTML  = "Currently: <br> Sign"
+  }else if(type== 'sign'){
+    type = "tile"
+    document.getElementById("switchTypeButton").innerHTML  = "Currently: <br> Tile"
   }
 }
 
